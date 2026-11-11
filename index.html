@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="1.5">
+<meta name="app-version" content="1.6">
 <title>映画</title>
 <meta name="application-name" content="映画">
 <meta name="apple-mobile-web-app-title" content="映画">
@@ -365,10 +365,10 @@ const LS_PENDING='movieStandalone.pendingConnect';
 const SS_TOKEN='movieStandalone.accessToken';
 const LS_TMDB='tmdb-read-token';
 const DATA_VERSION=1;
-/* Neutral defaults only. Personal data (watched films, ratings, criteria) is
+/* Blank defaults only. Personal data (watched films, ratings, criteria) is
    NEVER embedded in this public file — it lives only in Drive movie.json
    (created by the app) and in this device's local storage. */
-const DEFAULT_CRITERIA={ targets:{ shock:2.5, unease:2.5, beauty:2.5, aftertaste:2.5, gore:2.5, quiet:2.5, difficulty:2.5 }, maxGore:5, maxRuntime:0 };
+const DEFAULT_CRITERIA={ targets:{ shock:0, unease:0, beauty:0, aftertaste:0, gore:0, quiet:0, difficulty:0 }, maxGore:0, maxRuntime:0 };
 function seedData(){
   return {
     version: DATA_VERSION,
@@ -1060,7 +1060,7 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='1.5';
+const APP_VERSION='1.6';
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
   sp.classList.remove('wait'); sp.classList.add('hide');
