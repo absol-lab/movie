@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="app-version" content="1.5">
+<title>映画</title>
+<meta name="application-name" content="映画">
+<meta name="apple-mobile-web-app-title" content="映画">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    --fs: 16px;
+    --uifont: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", sans-serif;
+    --bg:#000000; --bg2:#101012; --card:#26262b; --card2:#33333a;
+    --text:#f4f4f6; --muted:#9c9ca4; --accent:#d9d9e0; --line:#33333a;
+    --danger:#ff453a; --nav:rgba(26,26,30,.92); --gold:#e8c268;
+    background: var(--bg); color: var(--text);
+    font-family: var(--uifont);
+    font-size: var(--fs); line-height: 1.6;
+    padding-bottom: 108px;
+    -webkit-text-size-adjust: 100%;
+  }
+  button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0; }
+  button:active { filter: brightness(1.32); }
+  input, textarea, select { font: inherit; color: inherit; }
+  a { color: var(--accent); }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 6px;
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 10px;
+    background: var(--bg);
+  }
+  .topbar .ttl { flex: 1; text-align: center; font-size: calc(var(--fs) * 1.12); letter-spacing: .08em; font-weight: 700; }
+  .spacer44 { width: 44px; flex: none; }
+
+  #syncbar { text-align: center; font-size: calc(var(--fs) * .72); color: var(--muted); padding: 0 16px 6px; min-height: 1.2em; }
+  #syncbar .err { color: var(--danger); }
+
+  main { max-width: 720px; margin: 0 auto; padding: 0 14px; }
+  .view { display: none; min-height: calc(100dvh + 2px); }
+  .view.active { display: block; }
+  .view.active.slide-fwd { animation: slideFwd .30s cubic-bezier(.25,.9,.3,1); }
+  .view.active.slide-back { animation: slideBack .30s cubic-bezier(.25,.9,.3,1); }
+  .view.active.fadein { animation: viewin .18s ease-out; }
+  @keyframes slideFwd { from { transform: translateX(56px); opacity: 0; } }
+  @keyframes slideBack { from { transform: translateX(-56px); opacity: 0; } }
+  @keyframes viewin { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .view.active.slide-fwd, .view.active.slide-back, .view.active.fadein { animation: none; }
+    #splash { transition: none; }
+  }
+
+  /* ---------- splash (pure-black fade veil) ---------- */
+  #splash { position: fixed; inset: 0; z-index: 200; background: #000; transition: opacity .45s ease; }
+  #splash.hide { opacity: 0; pointer-events: none; }
+
+  /* ---------- pill nav ---------- */
+  #pillnav {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+    z-index: 60; display: flex; align-items: stretch; gap: 2px;
+    background: var(--nav); border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    max-width: calc(100vw - 16px);
+  }
+  #pillnav button {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-width: 60px; min-height: 48px; padding: 6px 8px; border-radius: 999px;
+    font-size: 10.5px; color: var(--muted); line-height: 1.25; white-space: nowrap;
+  }
+  #pillnav button svg { width: 21px; height: 21px; }
+  #pillnav button.on { background: var(--card2); color: var(--text); font-weight: 700; }
+
+  /* ---------- generic ---------- */
+  .secttl { font-size: calc(var(--fs) * 1.05); font-weight: 700; margin: 18px 2px 10px; }
+  .secttl:first-child { margin-top: 6px; }
+  .note { font-size: calc(var(--fs) * .82); color: var(--muted); margin: 8px 2px; }
+  .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 48px; padding: 10px 16px; border-radius: 12px;
+    background: var(--card2); color: var(--text); font-size: calc(var(--fs) * .92);
+    border: 1px solid var(--line);
+  }
+  .btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+  .btn.danger { color: var(--danger); }
+  .btn.small { min-height: 44px; padding: 8px 12px; font-size: calc(var(--fs) * .85); }
+  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .textin, .selin {
+    width: 100%; background: var(--bg2); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px; font-size: 16px; color: var(--text);
+  }
+  .selin { width: auto; }
+  select.textin, select.selin { appearance: auto; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    min-height: 44px; padding: 9px 14px; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--line); color: var(--muted);
+    font-size: calc(var(--fs) * .88);
+  }
+  .chip.on { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+  .reasonchip {
+    display: inline-block; padding: 4px 10px; border-radius: 999px; margin: 0 6px 6px 0;
+    background: var(--bg2); border: 1px solid var(--line); font-size: calc(var(--fs) * .78); color: var(--accent);
+  }
+  .empty { text-align: center; color: var(--muted); padding: 28px 12px; font-size: calc(var(--fs) * .9); }
+
+  /* ---------- poster (fixed 2:3 box, never stretches) ---------- */
+  .poster {
+    position: relative; flex: none; align-self: flex-start;
+    aspect-ratio: 2 / 3; border-radius: 8px; overflow: hidden;
+    background: var(--card2); cursor: pointer; padding: 0; display: block;
+  }
+  .poster .pfb {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: 6px; text-align: center; font-size: 11px; line-height: 1.45; color: var(--muted);
+    word-break: break-all;
+  }
+  .poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  /* ---------- recommendation ---------- */
+  .recrow { display: flex; gap: 14px; }
+  .recmain { flex: 1; min-width: 0; }
+  .ftitle { font-size: calc(var(--fs) * 1.08); font-weight: 700; line-height: 1.4; }
+  .forig { font-size: calc(var(--fs) * .8); color: var(--muted); margin-top: 1px; }
+  .fmeta { font-size: calc(var(--fs) * .82); color: var(--muted); margin-top: 3px; }
+  .hook { font-size: calc(var(--fs) * .9); margin-top: 8px; }
+  .scorebox { text-align: center; flex: none; }
+  .scorebox .num { font-size: 30px; font-weight: 800; color: var(--gold); line-height: 1.1; }
+  .scorebox .lbl { font-size: 10.5px; color: var(--muted); letter-spacing: .06em; }
+  .topbadge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #000; background: var(--gold); border-radius: 6px; padding: 2px 8px; margin-bottom: 8px; }
+  .ranknum { font-size: calc(var(--fs) * .85); color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+
+  .axisbars { margin-top: 10px; }
+  .axisrow { display: flex; align-items: center; gap: 8px; margin-top: 5px; font-size: calc(var(--fs) * .76); }
+  .axisrow .al { width: 86px; flex: none; color: var(--muted); }
+  .axisrow .bar { position: relative; flex: 1; height: 6px; border-radius: 3px; background: var(--bg2); }
+  .axisrow .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--accent); }
+  .axisrow .tgt { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--gold); border-radius: 1px; }
+  .axisrow .av { width: 52px; flex: none; text-align: right; color: var(--text); }
+
+  /* ---------- criteria ---------- */
+  .critrow { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .critrow:last-child { border-bottom: none; }
+  .crithead { display: flex; align-items: baseline; gap: 8px; }
+  .crithead .cl { font-weight: 700; }
+  .crithead .cv { margin-left: auto; font-weight: 700; color: var(--gold); }
+  .crithint { font-size: calc(var(--fs) * .8); color: var(--muted); margin-top: 2px; }
+  input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--accent); }
+
+  /* ---------- input / library rows ---------- */
+  .librow { display: flex; gap: 12px; }
+  .libmain { flex: 1; min-width: 0; }
+  .fieldrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .fieldrow label { font-size: calc(var(--fs) * .78); color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .fieldrow input[type="date"], .fieldrow input[type="text"].memo {
+    background: var(--bg2); border: 1px solid var(--line); border-radius: 10px;
+    padding: 9px 10px; font-size: 16px; color: var(--text); color-scheme: dark;
+  }
+  .fieldrow input[type="text"].memo { flex: 1; min-width: 140px; }
+  .statusbadge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--line); color: var(--muted); margin-left: 6px; vertical-align: 2px; }
+  .searchrow { display: flex; gap: 8px; }
+  .searchrow .textin { flex: 1; }
+  .searchrow .btn { flex: none; }
+  .tmdbrow { display: flex; gap: 12px; align-items: flex-start; }
+  .formgrid label { display: block; font-size: calc(var(--fs) * .8); color: var(--muted); margin: 10px 0 4px; }
+  .formgrid .textin { margin-top: 0; }
+
+  /* ---------- settings ---------- */
+  .setbox { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .setbox h3 { margin: 2px 0 10px; font-size: calc(var(--fs) * 1.0); }
+  .syncpill { display: inline-block; font-size: calc(var(--fs) * .8); padding: 4px 12px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--line); color: var(--muted); }
+  .syncpill.ok { color: #7ee2a0; }
+  .syncpill.err { color: var(--danger); }
+  .syncstat { font-size: calc(var(--fs) * .82); color: var(--muted); margin-top: 8px; }
+  .syncstat .err { color: var(--danger); }
+
+  /* ---------- lightbox ---------- */
+  #lightbox {
+    position: fixed; inset: 0; z-index: 120; background: #000;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: calc(env(safe-area-inset-top, 0px) + 56px) 18px calc(env(safe-area-inset-bottom, 0px) + 18px);
+  }
+  #lightbox.open { display: flex; animation: viewin .18s ease-out; }
+  #lightbox img { max-width: 100%; max-height: calc(100dvh - 190px); object-fit: contain; border-radius: 6px; }
+  #lightbox .cap { margin-top: 14px; text-align: center; }
+  #lightbox .cap .t { font-weight: 700; font-size: calc(var(--fs) * 1.05); }
+  #lightbox .cap .m { color: var(--muted); font-size: calc(var(--fs) * .82); margin-top: 2px; }
+  #lbclose {
+    position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); right: 12px;
+    width: 48px; height: 48px; border-radius: 50%; background: var(--card);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text);
+  }
+</style>
+</head>
+<body data-theme="sumi">
+<script>try{var r=localStorage.getItem('movieStandalone.data.v1');if(r){var s=(JSON.parse(r)||{}).settings;if(s&&s.theme)document.body.dataset.theme=s.theme;}}catch(e){}</script>
+
+  <!-- ======= SPLASH ======= -->
+  <div id="splash" class="wait"></div>
+
+  <!-- ======= おすすめ ======= -->
+  <section id="view-rec" class="view active">
+    <div class="topbar"><div class="spacer44"></div><div class="ttl">おすすめ</div><div class="spacer44"></div></div>
+    <div id="syncbar"></div>
+    <main><div id="recwrap"></div></main>
+  </section>
+
+  <!-- ======= 判定基準 ======= -->
+  <section id="view-criteria" class="view">
+    <div class="topbar"><div class="spacer44"></div><div class="ttl">判定基準</div><div class="spacer44"></div></div>
+    <main><div id="criteriawrap"></div></main>
+  </section>
+
+  <!-- ======= 好み入力 ======= -->
+  <section id="view-input" class="view">
+    <div class="topbar"><div class="spacer44"></div><div class="ttl">好み入力</div><div class="spacer44"></div></div>
+    <main><div id="inputwrap"></div></main>
+  </section>
+
+  <!-- ======= ライブラリ ======= -->
+  <section id="view-library" class="view">
+    <div class="topbar"><div class="spacer44"></div><div class="ttl">ライブラリ</div><div class="spacer44"></div></div>
+    <main><div id="librarywrap"></div></main>
+  </section>
+
+  <!-- ======= 設定 ======= -->
+  <section id="view-settings" class="view">
+    <div class="topbar"><div class="spacer44"></div><div class="ttl">設定</div><div class="spacer44"></div></div>
+    <main><div id="settingswrap"></div></main>
+  </section>
+
+  <nav id="pillnav">
+    <button id="nav-rec" class="on" onclick="showView('rec')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.5 5.2 5.7.7-4.2 3.9 1.1 5.6L12 16.2l-5.1 2.7L8 13.3 3.8 9.4l5.7-.7z"/></svg><span>おすすめ</span></button>
+    <button id="nav-criteria" onclick="showView('criteria')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><circle cx="9" cy="7" r="2.2" fill="var(--bg)"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="15" cy="12" r="2.2" fill="var(--bg)"/><line x1="5" y1="17" x2="19" y2="17"/><circle cx="7.5" cy="17" r="2.2" fill="var(--bg)"/></svg><span>判定基準</span></button>
+    <button id="nav-input" onclick="showView('input')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 5.6a4.5 4.5 0 0 0-6.4 0L12 8 9.6 5.6a4.5 4.5 0 1 0-6.4 6.4L12 20.8l8.8-8.8a4.5 4.5 0 0 0 0-6.4z"/></svg><span>好み入力</span></button>
+    <button id="nav-library" onclick="showView('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="8.5" x2="15" y2="8.5"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15.5" x2="12.5" y2="15.5"/></svg><span>ライブラリ</span></button>
+    <button id="nav-settings" onclick="showView('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>設定</span></button>
+  </nav>
+
+  <input type="file" id="importfile" accept=".json,application/json" style="display:none" onchange="importDataFile(this)">
+
+  <div id="lightbox" onclick="if(event.target===this) closeLightbox()">
+    <button id="lbclose" onclick="closeLightbox()" aria-label="閉じる">✕</button>
+    <img id="lbimg" alt="ポスター拡大" onclick="closeLightbox()">
+    <div class="cap"><div class="t" id="lbtitle"></div><div class="m" id="lbmeta"></div></div>
+  </div>
+
+<script>
+'use strict';
+/* ================= utilities ================= */
+const $ = (id) => document.getElementById(id);
+function pad2(n){ return String(n).padStart(2,'0'); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escA(s){ return esc(s).replace(/"/g,'&quot;'); }
+let _idc = 0;
+function genId(){ _idc++; return 'f-'+Date.now().toString(36)+'-'+_idc.toString(36)+Math.floor(Math.random()*1e6).toString(36); }
+function storeSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
+function storeGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function storeDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+function fmt1(n){ return (Math.round((+n)*10)/10).toFixed(1); }
+
+/* ================= catalog (73 films, from the Space v1.5 getcatalog) ================= */
+const AXES = [
+  { key:'shock',      label:'衝撃の一場面', hint:'一つの場面で映画全体が裏返る強さ' },
+  { key:'unease',     label:'不穏さ',       hint:'整った表面の下に何かおかしいものがいる感覚' },
+  { key:'beauty',     label:'美しさ',       hint:'画面・音・佇まいの美しさ、不穏と両立する気高さ' },
+  { key:'aftertaste', label:'余韻',         hint:'観終わった後に残り続ける重さ・反響' },
+  { key:'gore',       label:'グロ・暴力',   hint:'直接的な残酷描写の量と生々しさ' },
+  { key:'quiet',      label:'静けさ',       hint:'説明の少なさ、間、スロウな運び' },
+  { key:'difficulty', label:'難解さ',       hint:'解釈を観客に委ねる度合い' }
+];
+const AXIS_KEYS = AXES.map(a=>a.key);
+const CATALOG = [
+{"key":"under-the-skin","title":"アンダー・ザ・スキン","titleOrig":"Under the Skin","year":2013,"director":"ジョナサン・グレイザー","runtime":108,"genres":["SF","ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/7gT56rtetoUhOkuDV1NBG2hf8JX.jpg","hook":"美しい女が男を誘い、黒い液体に沈めていく。浜辺の一場面が、残酷な描写なしで深く刺さる。","axes":{"shock":4,"unease":5,"beauty":5,"aftertaste":5,"gore":2,"quiet":5,"difficulty":4}},
+{"key":"sacred-deer","title":"聖なる鹿殺し","titleOrig":"The Killing of a Sacred Deer","year":2017,"director":"ヨルゴス・ランティモス","runtime":121,"genres":["スリラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/1hJrAKmmJHUm5ntS0zbUWoaOy9J.jpg","hook":"冒頭はいきなり心臓手術の映像。感情が平坦なまま、家族が静かに追い詰められていく。","axes":{"shock":3.5,"unease":5,"beauty":4,"aftertaste":4.5,"gore":2,"quiet":4,"difficulty":3.5}},
+{"key":"saint-maud","title":"セイント・モード／狂信","titleOrig":"Saint Maud","year":2019,"director":"ローズ・グラス","runtime":84,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/pCxJkN9FkD4xEfFZwqlGdVyu7IL.jpg","hook":"信仰に取り憑かれた看護師。自己懲罰の積み重ねの先、ラスト数秒の切り返しで全体が裏返る。","axes":{"shock":4.5,"unease":4.5,"beauty":3.5,"aftertaste":4.5,"gore":3,"quiet":3.5,"difficulty":2.5}},
+{"key":"talk-to-me","title":"トーク・トゥ・ミー","titleOrig":"Talk to Me","year":2022,"director":"ダニー＆マイケル・フィリッポウ","runtime":94,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/hCyXUslWFh2sCN5zlUfEclDUaAZ.jpg","hook":"降霊ごっこが本物になる。机の角の場面は音と執拗さで直球にやばい、今のA24ホラーの正面。","axes":{"shock":5,"unease":4,"beauty":2.5,"aftertaste":3.5,"gore":4.5,"quiet":1.5,"difficulty":1.5}},
+{"key":"green-room","title":"グリーン・ルーム","titleOrig":"Green Room","year":2015,"director":"ジェレミー・ソルニエ","runtime":95,"genres":["スリラー","ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/scADHEhITX3HtgX7t9vTffd8vkb.jpg","hook":"ネオナチのライブハウスに閉じ込められるパンクバンド。負傷の見せ方が事故映像のように痛い。","axes":{"shock":4.5,"unease":4.5,"beauty":2,"aftertaste":3.5,"gore":5,"quiet":1.5,"difficulty":1.5}},
+{"key":"the-witch","title":"ウィッチ","titleOrig":"The Witch","year":2015,"director":"ロバート・エガース","runtime":92,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/r7HG7XnbuntY0vINlGhm71ASoKv.jpg","hook":"冒頭の赤ん坊の場面で掴まれる。派手さではなく、清教徒の家族が静かに壊れていく怖さ。","axes":{"shock":3.5,"unease":5,"beauty":4,"aftertaste":4.5,"gore":3,"quiet":4.5,"difficulty":3}},
+{"key":"green-knight","title":"グリーン・ナイト","titleOrig":"The Green Knight","year":2021,"director":"デヴィッド・ロウリー","runtime":130,"genres":["ファンタジー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/pBeDPFrS8rX8onMwHJDsbR9zlVg.jpg","hook":"首切りゲームから始まる騎士の旅。暴力は少ないのに、絵の強さがずっと残る。","axes":{"shock":3,"unease":3.5,"beauty":5,"aftertaste":4.5,"gore":2.5,"quiet":4.5,"difficulty":4}},
+{"key":"lamb","title":"LAMB／ラム","titleOrig":"Lamb","year":2021,"director":"ヴァルディマル・ヨハンソン","runtime":106,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/plopeUGMQH2NMLeLv7neZLR5lVq.jpg","hook":"羊と人のあいだの子が生まれ、夫婦が普通に愛し育て始める。その『普通さ』の違和感。","axes":{"shock":3.5,"unease":4,"beauty":4,"aftertaste":4,"gore":2,"quiet":5,"difficulty":3}},
+{"key":"uncut-gems","title":"アンカット・ダイヤモンド","titleOrig":"Uncut Gems","year":2019,"director":"ジョシュ＆ベニー・サフディ","runtime":135,"genres":["スリラー","犯罪"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/7Q4STBVQ8M62WBCfL5DUQxnqunr.jpg","hook":"グロではなく緊張で殴る2時間。心拍数が上がったまま、ラストで一気に落とされる。","axes":{"shock":3.5,"unease":4,"beauty":2.5,"aftertaste":4,"gore":2,"quiet":0.5,"difficulty":2}},
+{"key":"good-time","title":"グッド・タイム","titleOrig":"Good Time","year":2017,"director":"ジョシュ＆ベニー・サフディ","runtime":102,"genres":["スリラー","犯罪"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/5OKWdebuIQw6FS1TVHN2D7fhh3B.jpg","hook":"一晩中トラブルが悪化し続ける。ネオンの夜と電子音楽、焦燥そのものが衝撃の連続。","axes":{"shock":3,"unease":4,"beauty":3,"aftertaste":3.5,"gore":2,"quiet":1,"difficulty":1.5}},
+{"key":"enemy","title":"エネミー","titleOrig":"Enemy","year":2013,"director":"ドゥニ・ヴィルヌーヴ","runtime":91,"genres":["スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/kxHxeM9f3sTUO4dd437ZjddW0wf.jpg","hook":"自分と瓜二つの男。衝撃は最後の数秒に全部集中していて、『え？』で終わる。","axes":{"shock":4.5,"unease":4.5,"beauty":3.5,"aftertaste":5,"gore":1.5,"quiet":3.5,"difficulty":4.5}},
+{"key":"it-comes-at-night","title":"イット・カムズ・アット・ナイト","titleOrig":"It Comes at Night","year":2017,"director":"トレイ・エドワード・シュルツ","runtime":91,"genres":["ホラー","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/mGRZ0kYYxpXMU8Bv9NFduxLSOhk.jpg","hook":"何が起きたか最後まで断定しない。怪物ではなく、人間同士の疑いが行き着く先が怖い。","axes":{"shock":3,"unease":5,"beauty":3.5,"aftertaste":4.5,"gore":2.5,"quiet":4,"difficulty":3.5}},
+{"key":"the-whale","title":"ザ・ホエール","titleOrig":"The Whale","year":2022,"director":"ダーレン・アロノフスキー","runtime":117,"genres":["ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/raziaximLmyODyTxGE4BpvVB7Xi.jpg","hook":"アパートの一室、1人の身体と演技に全部賭ける。過食の長回しと、死にかけの緊張が続く。","axes":{"shock":3.5,"unease":3,"beauty":3,"aftertaste":4.5,"gore":2.5,"quiet":3.5,"difficulty":1.5}},
+{"key":"a-ghost-story","title":"A GHOST STORY／ア・ゴースト・ストーリー","titleOrig":"A Ghost Story","year":2017,"director":"デヴィッド・ロウリー","runtime":92,"genres":["ドラマ","ファンタジー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/hLrBdA8RkiR80GWaNCO9CQWgS1q.jpg","hook":"シーツの幽霊が、時間の流れをただ見つめる。衝撃の場面はないのにラストが全部効いてくる。","axes":{"shock":2,"unease":3,"beauty":5,"aftertaste":5,"gore":0,"quiet":5,"difficulty":3.5}},
+{"key":"first-reformed","title":"魂のゆくえ","titleOrig":"First Reformed","year":2017,"director":"ポール・シュレイダー","runtime":113,"genres":["ドラマ","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/wE6rYOAfW4vBVut57aSctBZ4iHD.jpg","hook":"牧師の信仰と絶望が静かに臨界へ向かう。抑制された画面の向こうの炎。","axes":{"shock":3.5,"unease":4,"beauty":4,"aftertaste":5,"gore":2,"quiet":5,"difficulty":3.5}},
+{"key":"ex-machina","title":"エクス・マキナ","titleOrig":"Ex Machina","year":2014,"director":"アレックス・ガーランド","runtime":108,"genres":["SF","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/vQ88OEeV11DEBRJx6Dj8zwaCwDN.jpg","hook":"閉じた邸宅でAIと対話する。整った近代建築の内側で、少しずつ立場が反転していく。","axes":{"shock":3.5,"unease":4,"beauty":4.5,"aftertaste":4,"gore":2.5,"quiet":3.5,"difficulty":2.5}},
+{"key":"the-lobster","title":"ロブスター","titleOrig":"The Lobster","year":2015,"director":"ヨルゴス・ランティモス","runtime":119,"genres":["ドラマ","SF"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/gsFAqzdCfdKoyn4xdHbisSNGipj.jpg","hook":"恋人を見つけられなければ動物にされる世界。棒読みの演技と不条理な規則の気持ち悪さ。","axes":{"shock":3,"unease":4,"beauty":3.5,"aftertaste":4,"gore":2.5,"quiet":3.5,"difficulty":3.5}},
+{"key":"swiss-army-man","title":"スイス・アーミー・マン","titleOrig":"Swiss Army Man","year":2016,"director":"ダニエルズ","runtime":97,"genres":["コメディ","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/pHEciKLOeUJPudb2NIICLPGZIWa.jpg","hook":"万能な死体と無人島を脱出する。下品な設定の下に、意外なくらい純粋な孤独がある。","axes":{"shock":2.5,"unease":2,"beauty":3.5,"aftertaste":4,"gore":1.5,"quiet":2,"difficulty":2.5}},
+{"key":"blue-velvet","title":"ブルーベルベット","titleOrig":"Blue Velvet","year":1986,"director":"デヴィッド・リンチ","runtime":120,"genres":["スリラー","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/4Js6iIePIWWAScKixmXt7yW3PvU.jpg","hook":"整った郊外の芝生の下に虫が蠢く。『美しい表面の下に決定的におかしいもの』の原型。","axes":{"shock":4,"unease":4.5,"beauty":4.5,"aftertaste":5,"gore":3.5,"quiet":2.5,"difficulty":3}},
+{"key":"possession","title":"ポゼッション","titleOrig":"Possession","year":1981,"director":"アンジェイ・ズラウスキー","runtime":124,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/fF3vm3EIQ9TnpxZLlsvRB0GwsQH.jpg","hook":"地下鉄の通路でイザベル・アジャーニが身をよじり続ける長回し。演技の強度が理性を追い越す。","axes":{"shock":5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":4.5,"quiet":1.5,"difficulty":5}},
+{"key":"cure","title":"キュア","titleOrig":"CURE","year":1997,"director":"黒沢清","runtime":111,"genres":["ホラー","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/2KR0IDLxBIW3nQfS69o63BLeRWJ.jpg","hook":"喉に×印を刻む連続殺人。催眠の静けさと、水と風の音だけが残る日本産の不穏。","axes":{"shock":3.5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":3,"quiet":5,"difficulty":4}},
+{"key":"audition","title":"オーディション","titleOrig":"オーディション","year":1999,"director":"三池崇史","runtime":115,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/hkjpeUkXbsCjj0FrG1nNxVCxUid.jpg","hook":"前半の穏やかな恋愛劇が、ある電話の音から静かに反転する。『キリキリキリ』。","axes":{"shock":5,"unease":4.5,"beauty":3,"aftertaste":4.5,"gore":5,"quiet":3,"difficulty":2.5}},
+{"key":"perfect-blue","title":"パーフェクトブルー","titleOrig":"Perfect Blue","year":1997,"director":"今敏","runtime":81,"genres":["アニメ","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/79vujbsWEbX4dzffBV541QXN6sf.jpg","hook":"アイドルから女優へ転身する少女の現実が溶けていく。アニメでしかできない編集の悪夢。","axes":{"shock":4,"unease":4.5,"beauty":4,"aftertaste":4.5,"gore":3.5,"quiet":2,"difficulty":4}},
+{"key":"climax","title":"クライマックス","titleOrig":"Climax","year":2018,"director":"ギャスパー・ノエ","runtime":96,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/3yYb8iKnr1NAd1FGY5PyPjUxW4j.jpg","hook":"ダンサーたちの祝宴が一つの混入物で地獄に変わる。長回しのカメラが逃げ場を消していく。","axes":{"shock":4.5,"unease":4.5,"beauty":4.5,"aftertaste":4,"gore":3.5,"quiet":1,"difficulty":3}},
+{"key":"mother","title":"マザー！","titleOrig":"mother!","year":2017,"director":"ダーレン・アロノフスキー","runtime":121,"genres":["ホラー","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/2Uo8UDDq2d4BACzhKVl73TNUeCQ.jpg","hook":"招かれざる客が増え続け、家そのものが崩壊していく後半の加速。寓話の暴力。","axes":{"shock":4.5,"unease":4.5,"beauty":3.5,"aftertaste":4.5,"gore":4,"quiet":1.5,"difficulty":3.5}},
+{"key":"suspiria","title":"サスペリア","titleOrig":"Suspiria","year":1977,"director":"ダリオ・アルジェント","runtime":98,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/x55c8ABNRzG2f2OjBTNHMcjvtXb.jpg","hook":"原色の光とゴブリンの音楽。バレエ学校という整った場所の下にいる魔女たち。","axes":{"shock":4,"unease":4.5,"beauty":5,"aftertaste":4.5,"gore":4.5,"quiet":2.5,"difficulty":3}},
+{"key":"antichrist","title":"アンチクライスト","titleOrig":"Antichrist","year":2009,"director":"ラース・フォン・トリアー","runtime":108,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/eVO7fTYGQzFSWKgvCNbbMfnk2Gi.jpg","hook":"森の山小屋、喪失と狂気。美しいスローモーションと耐えがたい暴力が同居する。","axes":{"shock":5,"unease":5,"beauty":4.5,"aftertaste":4.5,"gore":5,"quiet":3.5,"difficulty":4.5}},
+{"key":"inland-empire","title":"インランド・エンパイア","titleOrig":"Inland Empire","year":2006,"director":"デヴィッド・リンチ","runtime":180,"genres":["ミステリー","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/fpo5azURhr4fVh4cB4kitabshdv.jpg","hook":"3時間、夢の論理だけで進む。説明を求めると負ける、感覚で沈むための映画。","axes":{"shock":3.5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":2.5,"quiet":3,"difficulty":5}},
+{"key":"kill-list","title":"キル・リスト","titleOrig":"Kill List","year":2011,"director":"ベン・ウィートリー","runtime":95,"genres":["ホラー","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/qwT2I3ons0oD58jIppKmd4qLtvB.jpg","hook":"ヒットマンの仕事映画として整って始まり、共同体の儀式へ滑り落ちる。ミッドサマーの「共同体が正気の顔で狂っている」の祖先。","axes":{"shock":4.5,"unease":4.5,"beauty":3,"aftertaste":4.5,"gore":4.5,"quiet":3,"difficulty":3.5}},
+{"key":"the-wailing","title":"哭声／コクソン","titleOrig":"The Wailing","year":2016,"director":"ナ・ホンジン","runtime":156,"genres":["ホラー","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/nRrhrNWcPVgVR5qQdFy4fmLvyKZ.jpg","hook":"韓国の村、祈祷、悪魔。誰が正しいのか最後まで確定せず、家族を守る行為が呪いになる。余韻が最大級。","axes":{"shock":4.5,"unease":5,"beauty":4,"aftertaste":5,"gore":4,"quiet":3,"difficulty":4}},
+{"key":"relic","title":"レリック -遺物-","titleOrig":"Relic","year":2020,"director":"ナタリー・エリカ・ジェームズ","runtime":89,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/xGwN4Cjk6hUWWBwvHVBsKdQIrwi.jpg","hook":"認知症の母の家そのものが迷路化する。派手な衝撃でなく、家と家族が腐っていく静かな型。","axes":{"shock":3.5,"unease":4.5,"beauty":3.5,"aftertaste":4.5,"gore":2.5,"quiet":4.5,"difficulty":3}},
+{"key":"hagazussa","title":"ハガズサ","titleOrig":"Hagazussa","year":2017,"director":"ルーカス・ファイゲルフェルト","runtime":102,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/bGU0l4AJrBThDepVt34gEtnPbxj.jpg","hook":"15世紀の山小屋、母と娘。ウィッチの時代・宗教・孤立をさらに言葉少なくした版で、美しさと不潔さが同居する。","axes":{"shock":3.5,"unease":5,"beauty":4.5,"aftertaste":4.5,"gore":4,"quiet":5,"difficulty":4.5}},
+{"key":"november","title":"ノベンバー","titleOrig":"November","year":2017,"director":"ライネル・サルネット","runtime":115,"genres":["ファンタジー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/5gmQ6k4NWQQ0vlZ5KXtN3iLIPT9.jpg","hook":"エストニアの民話世界。白黒の映像美が際立ち、悪魔との取引が日常として描かれる。気高さの軸が強い。","axes":{"shock":3,"unease":4.5,"beauty":4,"aftertaste":4,"gore":3,"quiet":4.5,"difficulty":4.5}},
+{"key":"thelma","title":"テルマ","titleOrig":"Thelma","year":2017,"director":"ヨアキム・トリアー","runtime":116,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/l3ciaQdEBQdlOP2Bkc7BV7VkPdK.jpg","hook":"敬虔な家庭から大学へ出た少女の力が漏れ出す。整った北欧の表面と、その下の抑圧。","axes":{"shock":3.5,"unease":4,"beauty":4,"aftertaste":4,"gore":2,"quiet":4,"difficulty":3}},
+{"key":"border","title":"ボーダー 二つの世界","titleOrig":"Border","year":2018,"director":"アリ・アッバシ","runtime":110,"genres":["ファンタジー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/lY2cMPndCOcOyPFSeCpq9fN1CCa.jpg","hook":"匂いで嘘が分かる税関職員の女。自分の正体の判明が、世界の見え方を裏返す。「決定的に間違ったもの」が主人公自身の中にある型。","axes":{"shock":4,"unease":4,"beauty":4.5,"aftertaste":4,"gore":3,"quiet":4,"difficulty":3}},
+{"key":"his-house","title":"His House／選ばれた家","titleOrig":"His House","year":2020,"director":"レミ・ウィークス","runtime":93,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/s6XxJEe4ovVTMgmGmKeO87OFANU.jpg","hook":"亡命先の公営住宅に何かがいる。家のホラーと亡命者の罪悪感が重なる密室の一本。","axes":{"shock":4,"unease":4.5,"beauty":3,"aftertaste":4,"gore":3,"quiet":3.5,"difficulty":2.5}},
+{"key":"burning","title":"バーニング 劇場版","titleOrig":"Burning","year":2018,"director":"イ・チャンドン","runtime":148,"genres":["ミステリー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/hxGv1O2W5SOJTmiBc45CL842mrx.jpg","hook":"村上春樹原作。何も起きていないのに全部がおかしい。関心領域の「見えない地獄」を、犯罪の気配でやる一本。","axes":{"shock":3,"unease":5,"beauty":5,"aftertaste":5,"gore":1,"quiet":5,"difficulty":4.5}},
+{"key":"funny-games","title":"ファニーゲーム","titleOrig":"Funny Games","year":1997,"director":"ミヒャエル・ハネケ","runtime":109,"genres":["スリラー","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/rlbznhqKycQkWw9agSO5vadTHWJ.jpg","hook":"礼儀正しい青年2人が、整った別荘の日常を壊す。観客への巻き戻しの一手は今も衝撃の設計として別格。","axes":{"shock":5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":4,"quiet":4,"difficulty":3.5}},
+{"key":"it-follows","title":"イット・フォローズ","titleOrig":"It Follows","year":2014,"director":"デヴィッド・ロバート・ミッチェル","runtime":100,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/oPl77Ih2CV2rJZdDUqWr2rYKpg3.jpg","hook":"美しいアメリカ郊外を「それ」が歩いて追ってくる。ブルーベルベットの郊外の芝生の下を、ホラーの規則1つでやった映画。","axes":{"shock":3.5,"unease":5,"beauty":4.5,"aftertaste":4,"gore":2,"quiet":4,"difficulty":3}},
+{"key":"safe","title":"セイフ","titleOrig":"Safe","year":1995,"director":"トッド・ヘインズ","runtime":119,"genres":["ドラマ","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/tBcan8HDI6Jt4SlDBZ1aM1189Gu.jpg","hook":"整った郊外住宅と優しい夫の下で、主婦の体だけが壊れていく。原因が最後まで確定しない、グロなしで不穏さ最大の証明。","axes":{"shock":3,"unease":5,"beauty":4.5,"aftertaste":5,"gore":0.5,"quiet":5,"difficulty":4}},
+{"key":"cache","title":"隠された記憶","titleOrig":"Caché","year":2005,"director":"ミヒャエル・ハネケ","runtime":117,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/vSIGVNCLDnw1NYH8mgSrxC5jYQn.jpg","hook":"自宅を撮ったビデオテープが届く。犯人探しの形で、植民地の記憶と家庭の嘘が滲む。静けさと難解さの上限サンプル。","axes":{"shock":3.5,"unease":5,"beauty":4.5,"aftertaste":4.5,"gore":2,"quiet":5,"difficulty":4.5}},
+{"key":"the-invitation","title":"インヴィテーション","titleOrig":"The Invitation","year":2015,"director":"カリン・クサマ","runtime":100,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/l9Z79zPrib1t10ymodQeRIDFUSN.jpg","hook":"元妻の新居でのディナー会。親切な表面の下に何かある、という感覚だけで引っ張り、最後に絵で答える密室会話劇。","axes":{"shock":3.5,"unease":4.5,"beauty":3.5,"aftertaste":4,"gore":3,"quiet":3.5,"difficulty":2}},
+{"key":"annihilation","title":"アナイアレイション -全滅領域-","titleOrig":"Annihilation","year":2018,"director":"アレックス・ガーランド","runtime":115,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/x2yDlZJrKwSvrJzp5C1oOMyQy7N.jpg","hook":"光を屈折させる領域の中で、自然が美しく間違っていく。MEN／エクス・マキナのガーランドの「世界観で見る」一本。","axes":{"shock":4,"unease":4.5,"beauty":5,"aftertaste":4.5,"gore":4,"quiet":3.5,"difficulty":4}},
+{"key":"coherence","title":"コヒーレンス","titleOrig":"Coherence","year":2013,"director":"ジェームズ・ワード・バーキット","runtime":89,"genres":["SF","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/ezUtb9m5DeLwL2gxi4gktzNCvQv.jpg","hook":"彗星の夜のホームパーティで現実が分岐する。低予算・ほぼ一軒家で「日常の裏側」をやる最小構成。","axes":{"shock":4,"unease":4,"beauty":2.5,"aftertaste":3.5,"gore":0.5,"quiet":2.5,"difficulty":3.5}},
+{"key":"raw","title":"RAW -少女のめざめ-","titleOrig":"Raw","year":2016,"director":"ジュリア・デュクルノー","runtime":99,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/f2VwZTtOf3Sdg8Smnnb4fcTk0t6.jpg","hook":"ベジタリアンの獣医学生が肉に目覚める。美しい画面で、身体の欲望が一段ずつ外れていく。","axes":{"shock":4.5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":5,"quiet":2.5,"difficulty":2.5}},
+{"key":"bones-and-all","title":"ボーンズ アンド オール","titleOrig":"Bones and All","year":2022,"director":"ルカ・グァダニーノ","runtime":130,"genres":["ホラー","ロマンス"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/8IPyO90Hu0nbGaJAq6eeBz2fukN.jpg","hook":"人を食べる若者たちのロードムービーを、最も美しい恋愛映画の顔で撮る。「美しい表面の下に決定的に間違ったもの」の恋愛版。","axes":{"shock":3.5,"unease":4,"beauty":5,"aftertaste":5,"gore":4.5,"quiet":3.5,"difficulty":2.5}},
+{"key":"titane","title":"TITANE／チタン","titleOrig":"Titane","year":2021,"director":"ジュリア・デュクルノー","runtime":108,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/jImosD860cSduxTwfogZ3C7ajOI.jpg","hook":"頭にチタンプレート、車、殺人、偽装。身体変容の先をいく、荒さと品格が同居する一本。","axes":{"shock":5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":2,"difficulty":4}},
+{"key":"possessor","title":"ポゼッサー","titleOrig":"Possessor","year":2020,"director":"ブランドン・クローネンバーグ","runtime":103,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/gQQxVmTKxCH0u2xU68VDxipNRd3.jpg","hook":"他人の身体に乗り移って暗殺する女。ポゼッション(1981)と名前で対になる現代版。身体と人格の境界の崩れ。","axes":{"shock":4.5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":3,"difficulty":3.5}},
+{"key":"crimes-of-the-future","title":"クライムズ・オブ・ザ・フューチャー","titleOrig":"Crimes of the Future","year":2022,"director":"デヴィッド・クローネンバーグ","runtime":107,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/1lCklZ9Ad49TM264RCsR1ClWELS.jpg","hook":"内臓を育てて公開手術する芸術家の世界。静かで難解な方の身体ホラー。","axes":{"shock":3.5,"unease":4,"beauty":4.5,"aftertaste":4,"gore":4.5,"quiet":4.5,"difficulty":4.5}},
+{"key":"infinity-pool","title":"インフィニティ・プール","titleOrig":"Infinity Pool","year":2023,"director":"ブランドン・クローネンバーグ","runtime":117,"genres":["ホラー","SF"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/4KgsdUToiyAVzTVfJBfMm5iJLrQ.jpg","hook":"高級リゾートの整った楽園と、自分の複製が処刑される制度。ミッドサマーの「明るいリゾート共同体」の毒をSFで。","axes":{"shock":4.5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":2,"difficulty":2.5}},
+{"key":"goodnight-mommy","title":"グッドナイト・マミー","titleOrig":"Goodnight Mommy","year":2014,"director":"監督名未記載（調査ファイルに記載なし）","runtime":99,"genres":["ホラー","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/eMNYF8D3Qo8CNXwvZ52IsoCUk72.jpg","hook":"包帯で顔を覆った母親を、双子が「本物か」と疑う。整ったモダンな家と子どもの視線。顔が隠れていること自体が不穏さになる。オーストリア製作。","axes":{"shock":4.5,"unease":5,"beauty":4,"aftertaste":4,"gore":3,"quiet":4,"difficulty":3.5}},
+{"key":"color-out-of-space","title":"カラー・アウト・オブ・スペース","titleOrig":"Color Out of Space","year":2019,"director":"リチャード・スタンリー","runtime":111,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/ocbtFL8Nt7XkMUxjooFC3BxGxfl.jpg","hook":"ラヴクラフト原作。隕石の色で農場と家族が変質する。色彩の美しさがそのまま汚染の表現になる型。","axes":{"shock":4,"unease":4,"beauty":4.5,"aftertaste":3.5,"gore":4,"quiet":2,"difficulty":3}},
+{"key":"dogtooth","title":"籠の中の乙女","titleOrig":"Dogtooth","year":2009,"director":"ヨルゴス・ランティモス","runtime":97,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/9VwqmjGv2J7wO5JlGqLQeexlSi3.jpg","hook":"ランティモスの原点。外界を知らずに育てられた子どもたちと、整った家庭の規則。聖なる鹿殺し／ロブスターへ連なる系譜の最初。","axes":{"shock":4,"unease":5,"beauty":3.5,"aftertaste":4.5,"gore":3,"quiet":4,"difficulty":3.5}},
+{"key":"kevin","title":"少年は残酷な弓を射る","titleOrig":"We Need to Talk About Kevin","year":2011,"director":"リン・ラムジー","runtime":112,"genres":["ドラマ","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/wNzwSVhydTtMH0L5pR3Z9wC0ZaU.jpg","hook":"母と息子。事件そのものより、その前後の日常の赤が刺さる。家族の喪失と罪悪感の静かな版。","axes":{"shock":4,"unease":4.5,"beauty":4,"aftertaste":5,"gore":3,"quiet":3,"difficulty":3}},
+{"key":"the-skin-i-live-in","title":"私が、生きる肌","titleOrig":"The Skin I Live In","year":2011,"director":"ペドロ・アルモドバル","runtime":120,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/dAu4gPiwzMyXNrpghxgQLPYYKaI.jpg","hook":"整形外科医の整った邸宅と、監禁された女。美しい画面のまま、倫理だけが一段ずつ崩れる。反転の設計が見事。","axes":{"shock":4.5,"unease":4.5,"beauty":4.5,"aftertaste":4.5,"gore":3.5,"quiet":3.5,"difficulty":3}},
+{"key":"morvern-callar","title":"モーヴァン・カラー","titleOrig":"Morvern Callar","year":2002,"director":"リン・ラムジー","runtime":97,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/kKGUF97v8a62MtSKM0V6fqDxGTS.jpg","hook":"死体と一緒に旅することになった女の、静かな再生。衝撃でなく余韻と美しさの側の補充枠。","axes":{"shock":2.5,"unease":3.5,"beauty":4.5,"aftertaste":4.5,"gore":1.5,"quiet":5,"difficulty":3.5}},
+{"key":"pulse","title":"回路","titleOrig":"Pulse","year":2001,"director":"黒沢清","runtime":119,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/talt2heBA5jty9jfcMvuQcOEsEC.jpg","hook":"キュアの監督。ネットに繋いだ部屋から人が消える。赤いテープの部屋と、誰もいない東京。静けさと余韻の日本側の極。","axes":{"shock":3.5,"unease":5,"beauty":4,"aftertaste":5,"gore":1.5,"quiet":5,"difficulty":4}},
+{"key":"confessions","title":"告白","titleOrig":"Confessions","year":2010,"director":"中島哲也","runtime":106,"genres":["ドラマ","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/p8vr7jVwflsSqAq91nWcOPZ2RIv.jpg","hook":"整った教室と美しいスローモーションで語られる復讐。表面の美しさと内容の冷たさの落差。","axes":{"shock":4,"unease":4,"beauty":5,"aftertaste":4.5,"gore":3,"quiet":2,"difficulty":2}},
+{"key":"cold-fish","title":"冷たい熱帯魚","titleOrig":"Cold Fish","year":2010,"director":"園子温","runtime":146,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/8jzXKuuSMNYU0jSakJkdkzQcZbL.jpg","hook":"熱帯魚店の日常が、善意の顔をした男によって解体されていく。グロ上限のテストにもなる上限サンプル。","axes":{"shock":5,"unease":4.5,"beauty":2.5,"aftertaste":4,"gore":5,"quiet":1.5,"difficulty":2}},
+{"key":"helter-skelter","title":"ヘルタースケルター","titleOrig":"Helter Skelter","year":2012,"director":"蜷川実花","runtime":127,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/rctha2z3lZ5YTCo4IE3cUJT4q2D.jpg","hook":"全身整形のモデルの美しい表面と、その下の崩壊。美しさの軸が突出した、絵画的な色彩の異色枠。","axes":{"shock":3.5,"unease":3.5,"beauty":5,"aftertaste":3.5,"gore":3.5,"quiet":1.5,"difficulty":2}},
+{"key":"memoria","title":"メモリア","titleOrig":"Memoria","year":2021,"director":"アピチャッポン・ウィーラセタクン","runtime":136,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/vg0A9jSPdXsXnsjQ5jt3BFzdW67.jpg","hook":"自分にだけ聞こえる爆発音を辿る旅。静けさ・難解さ・余韻が全部上限。aftersunの「衝撃なしで残る」方向の到達点。","axes":{"shock":2,"unease":4.5,"beauty":5,"aftertaste":5,"gore":0,"quiet":5,"difficulty":5}},
+{"key":"skinamarink","title":"スキナマリンク","titleOrig":"Skinamarink","year":2022,"director":"カイル・エドワード・ボール","runtime":100,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/h9CgK5iMb6hZE5eIQ3jLrtKPXUv.jpg","hook":"真夜中の家、子どもだけ、画面はほぼ暗闇と天井。観客の側が怖さを組み立てる低予算の実験作。難解さ上限のもう1本。","axes":{"shock":4,"unease":5,"beauty":3,"aftertaste":4.5,"gore":1,"quiet":5,"difficulty":5}},
+{"key":"nitram","title":"ニトラム","titleOrig":"Nitram","year":2021,"director":"ジャスティン・カーゼル","runtime":112,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/travctNsTHtPYsjggA13WpHQq2x.jpg","hook":"実在の事件の犯人の日常を、事件をほぼ描かずに積む。整った郊外と家族の無力さ。余韻の重さで選ぶ枠。","axes":{"shock":3.5,"unease":4.5,"beauty":3.5,"aftertaste":5,"gore":2.5,"quiet":4,"difficulty":2.5}},
+{"key":"hereditary","title":"ヘレディタリー／継承","titleOrig":"Hereditary","year":2018,"director":"アリ・アスター","runtime":127,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/t0Lr3xOB88ifQgsVFC9iadmYVc2.jpg","hook":"家族の喪失がそのまま呪いになる。あの首の場面と、音の使い方が忘れられない。","axes":{"shock":4.5,"unease":5,"beauty":4,"aftertaste":4.5,"gore":4,"quiet":3,"difficulty":3}},
+{"key":"midsommar","title":"ミッドサマー","titleOrig":"Midsommar","year":2019,"director":"アリ・アスター","runtime":148,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/8fpyy5NC1busoN4WV8dBl3eBf8q.jpg","hook":"白夜の花畑という最も明るい表面の下の崖。美しさと残酷さが同じ光で撮られている。","axes":{"shock":4.5,"unease":4.5,"beauty":5,"aftertaste":4.5,"gore":4.5,"quiet":2.5,"difficulty":3}},
+{"key":"the-lighthouse","title":"ライトハウス","titleOrig":"The Lighthouse","year":2019,"director":"ロバート・エガース","runtime":109,"genres":["ホラー","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/lTPSbEEA2J0VwAXJaDypb0003cF.jpg","hook":"孤島の灯台、2人の男、白黒の画面。狂気が潮騒と一緒に満ちてくる。","axes":{"shock":3.5,"unease":4.5,"beauty":4.5,"aftertaste":4.5,"gore":3,"quiet":3,"difficulty":4.5}},
+{"key":"x-movie","title":"X エックス","titleOrig":"X","year":2022,"director":"タイ・ウェスト","runtime":105,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/9zBOO8JUKescHhmfPdMAwYwE84o.jpg","hook":"70年代スラッシャーへの愛と、老いへの視線。殺し方の勢いが直球。","axes":{"shock":4,"unease":3.5,"beauty":3.5,"aftertaste":3,"gore":5,"quiet":2,"difficulty":1.5}},
+{"key":"pearl","title":"Pearl パール","titleOrig":"Pearl","year":2022,"director":"タイ・ウェスト","runtime":102,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/h7xwpgVCxdImnUYmYMQPK6fbl6H.jpg","hook":"テクニカラーの牧場で笑顔が崩れていく。長回しの独白がこの映画の心臓。","axes":{"shock":4,"unease":4,"beauty":4.5,"aftertaste":4,"gore":4,"quiet":2.5,"difficulty":2}},
+{"key":"aftersun","title":"aftersun／アフターサン","titleOrig":"Aftersun","year":2022,"director":"シャーロット・ウェルズ","runtime":102,"genres":["ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/juooGArBKAJcxnAqslZGpUj7pWH.jpg","hook":"父と娘の休暇のビデオ映像。衝撃の場面はないのに、ラストのダンスで全部が効いてくる。","axes":{"shock":1.5,"unease":2.5,"beauty":5,"aftertaste":5,"gore":0,"quiet":5,"difficulty":3}},
+{"key":"zone-of-interest","title":"関心領域","titleOrig":"The Zone of Interest","year":2023,"director":"ジョナサン・グレイザー","runtime":105,"genres":["ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/m62six4iJgG9hb0XX0OPT0nf7HX.jpg","hook":"塀の向こうの音だけが地獄を伝える。整った家庭の日常と、聞こえ続ける何か。","axes":{"shock":3,"unease":5,"beauty":4,"aftertaste":5,"gore":0.5,"quiet":4.5,"difficulty":3.5}},
+{"key":"tuesday","title":"終わりの鳥","titleOrig":"Tuesday","year":2023,"director":"ダイナ・O・プシッチ","runtime":110,"genres":["ドラマ","ファンタジー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/zrd6blans3SqghHSxPAl7tqnaOf.jpg","hook":"死が鳥の姿でやってくる。奇妙な設定を、母と娘の別れの物語として正面から撮る。","axes":{"shock":3,"unease":3,"beauty":3.5,"aftertaste":4.5,"gore":1.5,"quiet":3.5,"difficulty":3}},
+{"key":"love-lies-bleeding","title":"愛はステロイド","titleOrig":"Love Lies Bleeding","year":2024,"director":"ローズ・グラス","runtime":104,"genres":["スリラー","ロマンス"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/1bxOOchvNo5SDFTwZ2JljpdOGu9.jpg","hook":"筋肉と犯罪と恋。身体そのものが暴力的になっていくネオンのスリラー。","axes":{"shock":4,"unease":3.5,"beauty":3.5,"aftertaste":3.5,"gore":4,"quiet":1.5,"difficulty":2}},
+{"key":"men","title":"MEN 同じ顔の男たち","titleOrig":"Men","year":2022,"director":"アレックス・ガーランド","runtime":100,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/ilqxptpFOU85qWiSTkB491fZybr.jpg","hook":"村の男たちが全員同じ顔。ラスト20分、男が男を産む連鎖で見ていたものが崩れる。","axes":{"shock":5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":3,"difficulty":4}}
+];
+const CATALOG_BY_KEY = {};
+CATALOG.forEach(f=>{ CATALOG_BY_KEY[f.key]=f; });
+
+/* ================= data store ================= */
+const LS_DATA='movieStandalone.data.v1';
+const LS_TOKEN_EXP='movieStandalone.tokenExpiry';
+const LS_AUTH_ERR='movieStandalone.authError';
+const LS_PENDING='movieStandalone.pendingConnect';
+const SS_TOKEN='movieStandalone.accessToken';
+const LS_TMDB='tmdb-read-token';
+const DATA_VERSION=1;
+/* Neutral defaults only. Personal data (watched films, ratings, criteria) is
+   NEVER embedded in this public file — it lives only in Drive movie.json
+   (created by the app) and in this device's local storage. */
+const DEFAULT_CRITERIA={ targets:{ shock:2.5, unease:2.5, beauty:2.5, aftertaste:2.5, gore:2.5, quiet:2.5, difficulty:2.5 }, maxGore:5, maxRuntime:0 };
+function seedData(){
+  return {
+    version: DATA_VERSION,
+    updatedAt: 0, /* 0 so real data adopted from Drive always wins on first sync */
+    films: [],
+    criteria: JSON.parse(JSON.stringify(DEFAULT_CRITERIA))
+  };
+}
+function normalizeFilm(f){
+  if(!f || typeof f!=='object') return null;
+  return {
+    id: f.id || genId(),
+    catalogKey: f.catalogKey || null,
+    tmdbId: (typeof f.tmdbId==='number') ? f.tmdbId : null,
+    title: f.title || '',
+    titleOrig: f.titleOrig || '',
+    year: (typeof f.year==='number') ? f.year : null,
+    director: f.director || '',
+    runtime: (typeof f.runtime==='number') ? f.runtime : null,
+    poster: f.poster || null,
+    status: f.status==='want' ? 'want' : 'watched',
+    rating: (typeof f.rating==='number') ? f.rating : null,
+    memo: (typeof f.memo==='string') ? f.memo : null,
+    watchedDate: f.watchedDate || null
+  };
+}
+function normalizeData(d){
+  if(!d || typeof d!=='object') return null;
+  const c=(d.criteria && typeof d.criteria==='object') ? d.criteria : {};
+  const t=(c.targets && typeof c.targets==='object') ? c.targets : {};
+  const targets={};
+  AXIS_KEYS.forEach(k=>{ targets[k]=(typeof t[k]==='number') ? t[k] : DEFAULT_CRITERIA.targets[k]; });
+  return {
+    version: DATA_VERSION,
+    updatedAt: (typeof d.updatedAt==='number') ? d.updatedAt : 0,
+    films: Array.isArray(d.films) ? d.films.map(normalizeFilm).filter(Boolean) : [],
+    criteria: {
+      targets: targets,
+      maxGore: (typeof c.maxGore==='number') ? c.maxGore : DEFAULT_CRITERIA.maxGore,
+      maxRuntime: (typeof c.maxRuntime==='number') ? c.maxRuntime : DEFAULT_CRITERIA.maxRuntime
+    }
+  };
+}
+let DB=null;
+function loadLocal(){
+  try{ const raw=storeGet(LS_DATA); if(raw){ const d=normalizeData(JSON.parse(raw)); if(d){ DB=d; return; } } }catch(e){}
+  DB=seedData(); saveLocal();
+}
+function saveLocal(){ try{ storeSet(LS_DATA, JSON.stringify(DB)); }catch(e){} }
+function touch(){ DB.updatedAt=Date.now(); saveLocal(); scheduleSync(); }
+function filmById(id){ return DB.films.find(f=>f.id===id) || null; }
+function filmByCatalogKey(key){ return DB.films.find(f=>f.catalogKey===key) || null; }
+function posterFor(film){
+  if(film.catalogKey && CATALOG_BY_KEY[film.catalogKey]) return CATALOG_BY_KEY[film.catalogKey].poster;
+  return film.poster || null;
+}
+function runtimeFor(film){
+  if(typeof film.runtime==='number') return film.runtime;
+  if(film.catalogKey && CATALOG_BY_KEY[film.catalogKey]) return CATALOG_BY_KEY[film.catalogKey].runtime;
+  return null;
+}
+
+/* ================= recommendations ================= */
+function tasteProfile(){
+  const rated=DB.films.filter(f=>f.status==='watched' && typeof f.rating==='number' && f.rating>=4 && f.catalogKey && CATALOG_BY_KEY[f.catalogKey]);
+  if(!rated.length) return null;
+  const avg={};
+  AXIS_KEYS.forEach(k=>{ avg[k]=rated.reduce((s,f)=>s+CATALOG_BY_KEY[f.catalogKey].axes[k],0)/rated.length; });
+  return { profile: avg, count: rated.length };
+}
+function computeRecommendations(){
+  const tp=tasteProfile();
+  const targets={};
+  AXIS_KEYS.forEach(k=>{ targets[k]= tp ? (DB.criteria.targets[k]+tp.profile[k])/2 : DB.criteria.targets[k]; });
+  const picks=[];
+  for(const film of CATALOG){
+    if(filmByCatalogKey(film.key)) continue; /* already in library (watched or want) */
+    if(DB.criteria.maxRuntime>0 && film.runtime>DB.criteria.maxRuntime) continue;
+    if(film.axes.gore>DB.criteria.maxGore) continue;
+    const detail=AXES.map(a=>{
+      const fv=film.axes[a.key], tv=targets[a.key];
+      const closeness=Math.round((1-Math.abs(fv-tv)/5)*10)/10;
+      return { key:a.key, label:a.label, filmValue:fv, targetValue:tv, closeness:closeness };
+    });
+    const score=Math.round(100*detail.reduce((s,d)=>s+d.closeness,0)/detail.length);
+    const perfect=detail.filter(d=>d.closeness>=1);
+    let reasons=perfect.slice(0,2);
+    if(reasons.length<2){
+      const rest=detail.filter(d=>d.closeness<1).sort((x,y)=>y.closeness-x.closeness);
+      reasons=reasons.concat(rest.slice(0,2-reasons.length));
+    }
+    picks.push({ film:film, score:score, axisDetail:detail,
+      reasons: reasons.map(d=>d.label+' '+fmt1(d.filmValue)+'（狙い '+fmt1(d.targetValue)+'）') });
+  }
+  picks.sort((a,b)=>b.score-a.score); /* stable: catalog order breaks ties, like the Space */
+  return { picks:picks, blendedTargets:targets, profileCount: tp?tp.count:0, profileSource: tp?'blended':'criteria-only' };
+}
+
+/* ================= poster + lightbox ================= */
+function posterHTML(posterUrl, title, width){
+  const w=width||84;
+  let inner='<span class="pfb">'+esc(title||'')+'</span>';
+  if(posterUrl) inner+='<img src="'+escA(posterUrl)+'" alt="" loading="lazy" onerror="this.remove()">';
+  return '<button type="button" class="poster" style="width:'+w+'px" data-poster="'+escA(posterUrl||'')+'" data-title="'+escA(title||'')+'" onclick="posterTap(this)" aria-label="ポスターを拡大">'+inner+'</button>';
+}
+function posterTap(el){
+  const url=el.getAttribute('data-poster');
+  const title=el.getAttribute('data-title')||'';
+  if(!url) return;
+  openLightbox(url, title, el.getAttribute('data-meta')||'');
+}
+function enlargeUrl(url){ return url ? url.replace('/t/p/w342/','/t/p/w780/').replace('/t/p/w185/','/t/p/w780/') : url; }
+function openLightbox(url, title, meta){
+  const lb=$('lightbox'); if(!lb) return;
+  const img=$('lbimg');
+  img.onerror=function(){ if(img.src!==url) img.src=url; };
+  img.src=enlargeUrl(url);
+  $('lbtitle').textContent=title||'';
+  $('lbmeta').textContent=meta||'';
+  lb.classList.add('open');
+}
+function closeLightbox(){ const lb=$('lightbox'); if(lb) lb.classList.remove('open'); }
+function posterWithMeta(posterUrl, title, meta, width){
+  const html=posterHTML(posterUrl, title, width);
+  return html.replace('onclick="posterTap(this)"', 'data-meta="'+escA(meta||'')+'" onclick="posterTap(this)"');
+}
+function metaLine(f){
+  const parts=[];
+  if(f.year) parts.push(f.year+'年');
+  if(f.director) parts.push(f.director);
+  const rt=runtimeFor(f); if(rt) parts.push(rt+'分');
+  return parts.join('／');
+}
+
+/* ================= shared bits ================= */
+function ratingOptions(sel){
+  let h='<option value="">未評価</option>';
+  for(let v=0.5; v<=5.0001; v+=0.5){
+    const val=Math.round(v*10)/10;
+    h+='<option value="'+val+'"'+(sel===val?' selected':'')+'>★'+fmt1(val)+'</option>';
+  }
+  return h;
+}
+function axisBarsHTML(detail){
+  let h='<div class="axisbars">';
+  for(const d of detail){
+    h+='<div class="axisrow"><span class="al">'+esc(d.label)+'</span>'+
+      '<span class="bar"><span class="fill" style="width:'+(d.filmValue/5*100)+'%"></span>'+
+      '<span class="tgt" style="left:calc('+(d.targetValue/5*100)+'% - 1px)"></span></span>'+
+      '<span class="av">'+fmt1(d.filmValue)+' / '+fmt1(d.targetValue)+'</span></div>';
+  }
+  return h+'</div>';
+}
+function addCatalogFilm(key, status, rating){
+  const c=CATALOG_BY_KEY[key]; if(!c) return;
+  const ex=filmByCatalogKey(key);
+  if(ex){ ex.status=status; if(typeof rating==='number') ex.rating=rating; touch(); renderAll(); return; }
+  DB.films.push({ id:genId(), catalogKey:key, tmdbId:null, title:c.title, titleOrig:c.titleOrig, year:c.year, director:c.director, runtime:null, poster:null, status:status, rating:(typeof rating==='number')?rating:null, memo:null, watchedDate:null });
+  touch(); renderAll();
+}
+
+/* ================= view: おすすめ ================= */
+function recCardHTML(pick, isTop, rank){
+  const f=pick.film;
+  let h='<div class="card">';
+  if(isTop) h+='<span class="topbadge">今夜のおすすめ</span>';
+  else h+='<div class="ranknum">'+rank+'位</div>';
+  h+='<div class="recrow">'+posterWithMeta(f.poster, f.title, metaLine(f), isTop?104:84);
+  h+='<div class="recmain"><div style="display:flex;gap:10px;align-items:flex-start"><div style="flex:1;min-width:0">'+
+    '<div class="ftitle">'+esc(f.title)+'</div><div class="forig">'+esc(f.titleOrig||'')+'</div>'+
+    '<div class="fmeta">'+esc(metaLine(f))+(f.genres&&f.genres.length?'／'+esc(f.genres.join('・')):'')+'</div></div>'+
+    '<div class="scorebox"><div class="num">'+pick.score+'</div><div class="lbl">マッチ度</div></div></div>';
+  h+='<div class="hook">'+esc(f.hook||'')+'</div>';
+  h+='<div style="margin-top:8px">'+pick.reasons.map(r=>'<span class="reasonchip">'+esc(r)+'</span>').join('')+'</div>';
+  h+=axisBarsHTML(pick.axisDetail);
+  h+='<div class="btnrow"><button class="btn small" onclick="addCatalogFilm(\''+f.key+'\',\'want\',null)">観たいに追加</button>'+
+     '<button class="btn small primary" onclick="addCatalogFilm(\''+f.key+'\',\'watched\',null)">観た</button></div>';
+  h+='</div></div></div>';
+  return h;
+}
+function renderRec(){
+  const wrap=$('recwrap'); if(!wrap) return;
+  const r=computeRecommendations();
+  let h='';
+  if(r.profileSource==='criteria-only'){
+    h+='<div class="note">まだ好みプロフィールがありません（★4以上で評価した映画が種になります）。今は判定基準だけで選んでいます。「好み入力」で好きな映画を★4以上で登録すると、判定基準と半々で混ぜておすすめします。</div>';
+  } else {
+    h+='<div class="note">好みプロフィール（★4以上の'+r.profileCount+'本）と判定基準を半々で混ぜて選んでいます。</div>';
+  }
+  if(!r.picks.length){
+    h+='<div class="empty">条件に合う未登録の映画がありません。判定基準の上限を緩めてみてください。</div>';
+  } else {
+    h+=recCardHTML(r.picks[0], true, 1);
+    if(r.picks.length>1){
+      h+='<div class="secttl">候補</div>';
+      r.picks.slice(1,12).forEach((p,i)=>{ h+=recCardHTML(p, false, i+2); });
+    }
+  }
+  wrap.innerHTML=h;
+}
+
+/* ================= view: 判定基準 ================= */
+function renderCriteria(){
+  const wrap=$('criteriawrap'); if(!wrap) return;
+  const c=DB.criteria;
+  let h='<div class="note">各軸で「求める強さ」を調整します。おすすめは、この基準と好みプロフィール（★4以上の映画の平均）を半々で混ぜて計算します。</div><div class="card">';
+  for(const a of AXES){
+    h+='<div class="critrow"><div class="crithead"><span class="cl">'+esc(a.label)+'</span><span class="cv" id="critval-'+a.key+'">'+fmt1(c.targets[a.key])+'</span></div>'+
+      '<div class="crithint">'+esc(a.hint)+'</div>'+
+      '<input type="range" min="0" max="5" step="0.5" value="'+c.targets[a.key]+'" oninput="onTargetInput(\''+a.key+'\', this.value)"></div>';
+  }
+  h+='</div>';
+  h+='<div class="secttl">上映時間の上限</div><div class="chips">';
+  const rtOpts=[{v:0,l:'指定なし'},{v:90,l:'90分以内'},{v:120,l:'120分以内'},{v:150,l:'150分以内'}];
+  for(const o of rtOpts) h+='<button class="chip'+(c.maxRuntime===o.v?' on':'')+'" onclick="onMaxRuntime('+o.v+')">'+o.l+'</button>';
+  h+='</div>';
+  h+='<div class="secttl">グロの上限</div><div class="card"><div class="critrow"><div class="crithead"><span class="cl">グロ・暴力の上限</span><span class="cv" id="critval-maxgore">'+fmt1(c.maxGore)+'</span></div>'+
+    '<div class="crithint">この値を超える映画はおすすめから除外します</div>'+
+    '<input type="range" min="0" max="5" step="0.5" value="'+c.maxGore+'" oninput="onMaxGoreInput(this.value)"></div></div>';
+  wrap.innerHTML=h;
+}
+function onTargetInput(key, val){
+  DB.criteria.targets[key]=parseFloat(val);
+  const el=$('critval-'+key); if(el) el.textContent=fmt1(DB.criteria.targets[key]);
+  touch();
+}
+function onMaxGoreInput(val){
+  DB.criteria.maxGore=parseFloat(val);
+  const el=$('critval-maxgore'); if(el) el.textContent=fmt1(DB.criteria.maxGore);
+  touch();
+}
+function onMaxRuntime(v){ DB.criteria.maxRuntime=v; touch(); renderCriteria(); }
+
+/* ================= view: 好み入力 ================= */
+let catalogQuery='';
+let tmdbResults=[];
+let tmdbMsg='';
+function renderInput(){
+  const wrap=$('inputwrap'); if(!wrap) return;
+  let h='';
+  /* --- TMDb search (top) --- */
+  h+='<div class="secttl">TMDbで探す</div>';
+  const tok=getTmdbToken();
+  if(!tok){
+    h+='<div class="card"><div class="note" style="margin:0">TMDbのトークンが未設定です。「設定」タブでトークンを保存すると、ここから映画を検索して登録できます。</div></div>';
+  } else {
+    h+='<div class="searchrow"><input class="textin" id="tmdbq" type="search" placeholder="映画のタイトルで検索" value="'+escA(tmdbQuery)+'"><button class="btn primary" onclick="doTmdbSearch()">検索</button></div>';
+    if(tmdbMsg) h+='<div class="note">'+esc(tmdbMsg)+'</div>';
+    if(tmdbResults.length){
+      h+='<div style="margin-top:10px">';
+      tmdbResults.forEach((m,i)=>{ h+=tmdbRowHTML(m,i); });
+      h+='</div>';
+    }
+  }
+  /* --- catalog search --- */
+  h+='<div class="secttl">カタログから探す</div>';
+  h+='<div class="searchrow"><input class="textin" id="catq" type="search" placeholder="タイトル・監督で検索" value="'+escA(catalogQuery)+'" oninput="onCatalogQuery(this.value)"></div>';
+  h+='<div id="catlist" style="margin-top:10px">'+catalogListHTML()+'</div>';
+  /* --- free add --- */
+  h+='<div class="secttl">カタログにない映画を追加</div><div class="card formgrid">'+
+    '<label>タイトル（必須）</label><input class="textin" id="free-title" type="text" placeholder="タイトル">'+
+    '<label>原題</label><input class="textin" id="free-orig" type="text" placeholder="Original title">'+
+    '<label>年</label><input class="textin" id="free-year" type="number" inputmode="numeric" placeholder="2024">'+
+    '<label>監督</label><input class="textin" id="free-director" type="text" placeholder="監督名">'+
+    '<label>上映時間（分）</label><input class="textin" id="free-runtime" type="number" inputmode="numeric" placeholder="120">'+
+    '<label>評価</label><select class="selin" id="free-rating">'+ratingOptions(null)+'</select>'+
+    '<div class="btnrow"><button class="btn primary" onclick="addFreeFilm()">観た映画として追加</button></div></div>';
+  wrap.innerHTML=h;
+}
+function tmdbRowHTML(m, i){
+  const poster=m.poster_path ? 'https://image.tmdb.org/t/p/w185'+m.poster_path : null;
+  const title=m.title||m.original_title||'';
+  const year=m.release_date ? m.release_date.slice(0,4) : '';
+  const already=DB.films.some(f=>f.tmdbId===m.id);
+  let h='<div class="card"><div class="tmdbrow">'+posterWithMeta(poster, title, (year?year+'年／':'')+(m.original_title||''), 62);
+  h+='<div class="libmain"><div class="ftitle" style="font-size:15.5px">'+esc(title)+(already?'<span class="statusbadge">登録済み</span>':'')+'</div>'+
+    '<div class="forig">'+esc(m.original_title||'')+'</div><div class="fmeta">'+esc(year?year+'年':'')+'</div>';
+  if(!already){
+    h+='<div class="fieldrow"><label>評価 <select class="selin" id="tmdb-rating-'+i+'">'+ratingOptions(null)+'</select></label>'+
+      '<button class="btn small primary" onclick="registerTmdb('+i+')">観た・評価する</button></div>';
+  }
+  h+='</div></div></div>';
+  return h;
+}
+function catalogListHTML(){
+  const q=catalogQuery.trim().toLowerCase();
+  const list=CATALOG.filter(f=>!q || (f.title||'').toLowerCase().includes(q) || (f.titleOrig||'').toLowerCase().includes(q) || (f.director||'').toLowerCase().includes(q));
+  if(!list.length) return '<div class="empty">見つかりませんでした</div>';
+  let h='';
+  for(const f of list){
+    const ex=filmByCatalogKey(f.key);
+    h+='<div class="card"><div class="librow">'+posterWithMeta(f.poster, f.title, metaLine(f), 62)+
+      '<div class="libmain"><div class="ftitle" style="font-size:15.5px">'+esc(f.title)+(ex?'<span class="statusbadge">'+(ex.status==='watched'?'観た':'観たい')+'</span>':'')+'</div>'+
+      '<div class="forig">'+esc(f.titleOrig||'')+'</div><div class="fmeta">'+esc(metaLine(f))+'</div>'+
+      '<div class="fieldrow"><label>評価 <select class="selin" id="cat-rating-'+f.key+'">'+ratingOptions(ex?ex.rating:null)+'</select></label></div>'+
+      '<div class="btnrow"><button class="btn small primary" onclick="onCatalogRegister(\''+f.key+'\',\'watched\')">観た・評価する</button>'+
+      '<button class="btn small" onclick="onCatalogRegister(\''+f.key+'\',\'want\')">観たい</button></div>'+
+      '</div></div></div>';
+  }
+  return h;
+}
+function onCatalogQuery(v){
+  catalogQuery=v;
+  const el=$('catlist'); if(el) el.innerHTML=catalogListHTML();
+}
+function onCatalogRegister(key, status){
+  let rating=null;
+  if(status==='watched'){
+    const sel=$('cat-rating-'+key);
+    if(sel && sel.value) rating=parseFloat(sel.value);
+  }
+  addCatalogFilm(key, status, rating);
+}
+function addFreeFilm(){
+  const title=($('free-title').value||'').trim();
+  if(!title){ alert('タイトルを入力してください。'); return; }
+  const y=parseInt($('free-year').value,10);
+  const rt=parseInt($('free-runtime').value,10);
+  const rv=$('free-rating').value;
+  DB.films.push({ id:genId(), catalogKey:null, tmdbId:null, title:title,
+    titleOrig:($('free-orig').value||'').trim(), year:isNaN(y)?null:y,
+    director:($('free-director').value||'').trim(), runtime:isNaN(rt)?null:rt, poster:null,
+    status:'watched', rating:rv?parseFloat(rv):null, memo:null, watchedDate:null });
+  touch(); renderAll();
+  alert('追加しました。ライブラリで確認できます。');
+}
+
+/* ================= TMDb ================= */
+let tmdbQuery='';
+function getTmdbToken(){ return (storeGet(LS_TMDB)||'').trim(); }
+async function tmdbFetch(path){
+  const tok=getTmdbToken();
+  const res=await fetch('https://api.themoviedb.org/3'+path, { headers:{ Authorization:'Bearer '+tok, Accept:'application/json' } });
+  if(res.status===401) throw new Error('TMDbのトークンが無効です（401）。設定タブでトークンを確認してください。');
+  if(!res.ok) throw new Error('TMDb検索に失敗しました（HTTP '+res.status+'）');
+  return res.json();
+}
+async function doTmdbSearch(){
+  const q=($('tmdbq').value||'').trim();
+  tmdbQuery=q;
+  if(!q){ tmdbMsg=''; tmdbResults=[]; renderInput(); return; }
+  tmdbMsg='検索中…'; renderInput();
+  const inp=$('tmdbq'); if(inp) inp.value=q;
+  try{
+    const j=await tmdbFetch('/search/movie?language=ja-JP&include_adult=false&query='+encodeURIComponent(q));
+    const seen={}; const out=[];
+    for(const m of (j.results||[])){ if(m && m.id && !seen[m.id]){ seen[m.id]=1; out.push(m); } }
+    tmdbResults=out;
+    tmdbMsg=out.length ? out.length+'件見つかりました' : '見つかりませんでした';
+  }catch(e){
+    tmdbResults=[]; tmdbMsg=(e && e.message) ? e.message : String(e);
+  }
+  renderInput();
+  const inp2=$('tmdbq'); if(inp2) inp2.value=q;
+}
+async function registerTmdb(i){
+  const m=tmdbResults[i]; if(!m) return;
+  const sel=$('tmdb-rating-'+i);
+  const rating=(sel && sel.value) ? parseFloat(sel.value) : null;
+  let director='', runtime=null;
+  try{
+    const d=await tmdbFetch('/movie/'+m.id+'?language=ja-JP&append_to_response=credits');
+    if(typeof d.runtime==='number') runtime=d.runtime;
+    const crew=(d.credits && d.credits.crew) || [];
+    const dir=crew.find(c=>c.job==='Director');
+    if(dir) director=dir.name||'';
+  }catch(e){ /* details are best-effort; registration still proceeds */ }
+  DB.films.push({ id:genId(), catalogKey:null, tmdbId:m.id,
+    title:m.title||m.original_title||'', titleOrig:m.original_title||'',
+    year:m.release_date ? parseInt(m.release_date.slice(0,4),10) : null,
+    director:director, runtime:runtime,
+    poster: m.poster_path ? 'https://image.tmdb.org/t/p/w342'+m.poster_path : null,
+    status:'watched', rating:rating, memo:null, watchedDate:null });
+  touch(); renderAll();
+  alert('登録しました。ライブラリで確認できます。');
+}
+
+/* ================= view: ライブラリ ================= */
+function libRowHTML(f){
+  const poster=posterFor(f);
+  let h='<div class="card"><div class="librow">'+posterWithMeta(poster, f.title, metaLine(f), 62)+
+    '<div class="libmain"><div class="ftitle" style="font-size:15.5px">'+esc(f.title)+'</div>'+
+    '<div class="forig">'+esc(f.titleOrig||'')+'</div><div class="fmeta">'+esc(metaLine(f))+'</div>'+
+    '<div class="fieldrow"><label>評価 <select class="selin" onchange="onLibRating(\''+f.id+'\', this.value)">'+ratingOptions(f.rating)+'</select></label>'+
+    '<label>鑑賞日 <input type="date" value="'+escA(f.watchedDate||'')+'" onchange="onLibDate(\''+f.id+'\', this.value)"></label></div>'+
+    '<div class="fieldrow"><input type="text" class="memo" placeholder="メモ" value="'+escA(f.memo||'')+'" onchange="onLibMemo(\''+f.id+'\', this.value)"></div>'+
+    '<div class="btnrow">';
+  if(f.status==='watched') h+='<button class="btn small" onclick="onLibToggle(\''+f.id+'\')">観たいに戻す</button>';
+  else h+='<button class="btn small primary" onclick="onLibToggle(\''+f.id+'\')">観たにする</button>';
+  h+='<button class="btn small danger" onclick="onLibDelete(\''+f.id+'\')">削除</button></div>'+
+    '</div></div></div>';
+  return h;
+}
+function renderLibrary(){
+  const wrap=$('librarywrap'); if(!wrap) return;
+  const watched=DB.films.filter(f=>f.status==='watched');
+  const want=DB.films.filter(f=>f.status==='want');
+  let h='<div class="secttl">観た映画（'+watched.length+'）</div>';
+  h+= watched.length ? watched.map(libRowHTML).join('') : '<div class="empty">まだありません</div>';
+  h+='<div class="secttl">観たい映画（'+want.length+'）</div>';
+  h+= want.length ? want.map(libRowHTML).join('') : '<div class="empty">まだありません</div>';
+  wrap.innerHTML=h;
+}
+function onLibRating(id, v){ const f=filmById(id); if(!f) return; f.rating=v?parseFloat(v):null; touch(); }
+function onLibDate(id, v){ const f=filmById(id); if(!f) return; f.watchedDate=v||null; touch(); }
+function onLibMemo(id, v){ const f=filmById(id); if(!f) return; f.memo=v||null; touch(); }
+function onLibToggle(id){ const f=filmById(id); if(!f) return; f.status=(f.status==='watched')?'want':'watched'; touch(); renderAll(); }
+function onLibDelete(id){
+  const f=filmById(id); if(!f) return;
+  if(!confirm('「'+f.title+'」を削除しますか？')) return;
+  DB.films=DB.films.filter(x=>x.id!==id); touch(); renderAll();
+}
+
+/* ================= view: 設定 ================= */
+function renderSettings(){
+  const wrap=$('settingswrap'); if(!wrap) return;
+  const tok=getTmdbToken();
+  let h='<div class="secttl">TMDb連携</div><div class="setbox"><h3>API Read Access Token</h3>'+
+    '<input class="textin" id="tmdb-token-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="トークンを貼り付け" value="'+escA(tok)+'">'+
+    '<div class="btnrow"><button class="btn primary" onclick="saveTmdbToken()">保存</button><button class="btn" onclick="clearTmdbToken()">消去</button></div>'+
+    '<div class="note">トークンはこの端末内にだけ保存され、Driveには同期されません。</div></div>';
+  h+='<div class="secttl">Google Drive 同期</div><div class="setbox"><h3>同期</h3>'+
+    '<span class="syncpill" id="syncpill">未接続</span>'+
+    '<div class="btnrow"><button class="btn primary" onclick="connectDrive()">Google Driveと接続</button><button class="btn" onclick="syncNow(\'manual\')">今すぐ同期</button><button class="btn" onclick="disconnectDrive()">切断</button></div>'+
+    '<div class="syncstat" id="syncstat"></div>'+
+    '<div class="note">同期先は Drive 上の「movie.json」（このアプリが作成したファイルのみ読み書きします）。未接続でも端末内で全機能が使えます。</div></div>';
+  h+='<div class="secttl">データ</div><div class="setbox"><h3>データのインポート</h3>'+
+    '<div class="note" style="margin-top:0">移行用ファイル（movie.json と同じ形式の JSON）を読み込み、今のデータを置き換えます。一度だけ使う想定の機能です。</div>'+
+    '<div class="btnrow"><button class="btn" onclick="document.getElementById(\'importfile\').click()">JSONファイルを読み込む</button></div></div>';
+  h+='<div class="secttl">このアプリについて</div><div class="setbox">'+
+    '<div class="note" style="margin:0">映画おすすめアプリ（独立版） v'+APP_VERSION+' ／ データは端末内と、接続時はあなたの Google Drive に保存されます。</div>'+
+    '<div class="note">This product uses the TMDB API but is not endorsed or certified by TMDB.</div></div>';
+  wrap.innerHTML=h;
+  renderSyncStatus();
+}
+function saveTmdbToken(){
+  const v=($('tmdb-token-in').value||'').trim();
+  if(v) storeSet(LS_TMDB, v); else storeDel(LS_TMDB);
+  renderSettings(); renderInput();
+  alert('保存しました。');
+}
+function clearTmdbToken(){ storeDel(LS_TMDB); renderSettings(); renderInput(); }
+function importDataFile(input){
+  const file=input && input.files && input.files[0];
+  input.value='';
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(){
+    try{
+      const parsed=JSON.parse(String(reader.result||''));
+      if(!parsed || !Array.isArray(parsed.films)) throw new Error('形式が違います');
+      const d=normalizeData(parsed);
+      if(!d) throw new Error('形式が違います');
+      if(!confirm('今のデータを、読み込んだデータ（映画'+d.films.length+'件）で置き換えますか？')) return;
+      DB=d;
+      DB.updatedAt=Date.now(); /* imported data wins the next sync and uploads */
+      saveLocal(); scheduleSync(); renderAll();
+      alert('インポートしました（映画'+DB.films.length+'件）。');
+    }catch(e){
+      alert('読み込めませんでした：'+((e && e.message) ? e.message : e));
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ================= navigation ================= */
+const VIEW_ORDER=['rec','criteria','input','library','settings'];
+let currentView='rec';
+function showView(name){
+  const prev=currentView;
+  currentView=name;
+  VIEW_ORDER.forEach(v=>{
+    const el=$('view-'+v); if(!el) return;
+    const on=(v===name);
+    el.classList.toggle('active', on);
+    el.classList.remove('slide-fwd','slide-back','fadein');
+    if(on && prev!==name){
+      const dir=VIEW_ORDER.indexOf(name)-VIEW_ORDER.indexOf(prev);
+      el.classList.add(dir>0?'slide-fwd':(dir<0?'slide-back':'fadein'));
+    }
+    const nav=$('nav-'+v); if(nav) nav.classList.toggle('on', on);
+  });
+  try{ window.scrollTo(0,0); }catch(e){}
+  if(name==='rec') renderRec();
+  if(name==='library') renderLibrary();
+  if(name==='settings') renderSyncStatus();
+}
+function renderAll(){
+  renderRec(); renderCriteria(); renderInput(); renderLibrary(); renderSettings();
+}
+
+/* ================= Google Drive sync ================= */
+const DRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
+const DRIVE_API='https://www.googleapis.com/drive/v3';
+const UPLOAD_API='https://www.googleapis.com/upload/drive/v3';
+const DRIVE_FILE_NAME='movie.json';
+const DEFAULT_CLIENT_ID='386087008053-de53ufnkvcnbjslkuhmq2l2pm9fj4c2t.apps.googleusercontent.com';
+let syncStatus='disconnected'; /* disconnected | syncing | synced | error */
+let syncMsg='';
+let lastSyncAt=0;
+let syncTimer=null;
+let syncRunning=false;
+
+function getClientId(){ return DEFAULT_CLIENT_ID; }
+function getValidToken(){
+  const tok=storeGet(SS_TOKEN);
+  const exp=+(storeGet(LS_TOKEN_EXP)||0);
+  if(tok && exp && Date.now()<exp-15000) return tok;
+  return null;
+}
+function isDriveConnected(){ return !!getValidToken(); }
+function storeToken(tok, expiresInSec){
+  storeSet(SS_TOKEN, tok);
+  storeSet(LS_TOKEN_EXP, String(Date.now() + (expiresInSec||3600)*1000));
+  storeDel(LS_AUTH_ERR);
+}
+function clearToken(){
+  storeDel(SS_TOKEN);
+  storeDel(LS_TOKEN_EXP);
+  storeDel(LS_AUTH_ERR);
+}
+function setSyncStatus(st, msg){
+  syncStatus=st; if(typeof msg==='string') syncMsg=msg;
+  renderSyncStatus();
+}
+function renderSyncStatus(){
+  let label, cls='';
+  if(syncStatus==='synced') label='同期済み'+(lastSyncAt ? '（'+pad2(new Date(lastSyncAt).getHours())+':'+pad2(new Date(lastSyncAt).getMinutes())+'）' : '');
+  else if(syncStatus==='syncing') label='同期中…';
+  else if(syncStatus==='error'){ label='同期エラー'+(syncMsg ? '：'+syncMsg : ''); cls='err'; }
+  else label='Drive未接続（端末内に保存中）';
+  const bar=$('syncbar'); if(bar) bar.innerHTML='<span class="'+cls+'">'+esc(label)+'</span>';
+  const st=$('syncstat'); if(st) st.innerHTML='<span class="'+cls+'">'+esc(label)+'</span>';
+  const pill=$('syncpill');
+  if(pill){
+    pill.textContent = syncStatus==='synced' ? '同期済み' : (syncStatus==='syncing' ? '同期中…' : (syncStatus==='error' ? '同期エラー' : '未接続'));
+    pill.className='syncpill'+(syncStatus==='synced'?' ok':(syncStatus==='error'?' err':''));
+  }
+}
+function scheduleSync(){
+  if(!isDriveConnected()) return;
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer=setTimeout(()=>{ syncNow('auto'); }, 1500);
+}
+function connectDrive(){
+  const cid=getClientId();
+  if(!(window.google && google.accounts && google.accounts.oauth2)){
+    alert('Googleのライブラリを読み込めませんでした。通信環境を確認して、もう一度お試しください。'); return;
+  }
+  try{
+    const tc=google.accounts.oauth2.initTokenClient({
+      client_id: cid,
+      scope: DRIVE_SCOPE,
+      ux_mode: 'popup',
+      callback: function(resp){
+        if(resp && resp.access_token){
+          storeToken(resp.access_token, parseInt(resp.expires_in||'3600',10));
+          storeDel(LS_PENDING);
+          setSyncStatus('syncing');
+          syncNow('connect');
+        } else {
+          setSyncStatus('error', 'トークンを取得できませんでした');
+        }
+      },
+      error_callback: function(err){
+        const t='認証エラー：'+((err && (err.type || err.message)) || 'unknown');
+        storeSet(LS_AUTH_ERR, t);
+        setSyncStatus('error', t);
+        storeDel(LS_PENDING);
+      }
+    });
+    storeSet(LS_PENDING, String(Date.now()));
+    tc.requestAccessToken();
+  }catch(e){
+    alert('接続を開始できませんでした：'+(e && e.message ? e.message : e));
+  }
+}
+function disconnectDrive(){
+  const tok=getValidToken();
+  if(tok && window.google && google.accounts && google.accounts.oauth2){
+    try{ google.accounts.oauth2.revoke(tok, function(){}); }catch(e){}
+  }
+  clearToken(); setSyncStatus('disconnected');
+}
+function checkAuthRedirect(){
+  let handled=null;
+  const hadPending=!!storeGet(LS_PENDING);
+  if(location.hash && location.hash.indexOf('access_token')>=0){
+    const p=new URLSearchParams(location.hash.slice(1));
+    const tok=p.get('access_token');
+    const exp=parseInt(p.get('expires_in')||'3600', 10);
+    if(tok){ storeToken(tok, exp); storeDel(LS_PENDING); handled='token'; }
+    try{ history.replaceState(null, '', location.pathname+location.search); }catch(e){}
+  } else if(location.hash && location.hash.indexOf('error')>=0){
+    const p=new URLSearchParams(location.hash.slice(1));
+    const errTxt='認証エラー：'+(p.get('error')||'unknown')+((p.get('error_description')) ? '（'+p.get('error_description')+'）' : '');
+    storeSet(LS_AUTH_ERR, errTxt);
+    setSyncStatus('error', errTxt);
+    storeDel(LS_PENDING);
+    handled='error';
+    try{ history.replaceState(null, '', location.pathname+location.search); }catch(e){}
+  }
+  if(!handled && hadPending && !isDriveConnected()){
+    const diagTxt='診断：接続ボタンは押されましたが、認証の戻りが確認できませんでした';
+    storeSet(LS_AUTH_ERR, diagTxt);
+    setSyncStatus('error', diagTxt);
+    storeDel(LS_PENDING);
+    handled='error';
+  }
+  return handled;
+}
+function trySilentRefresh(){
+  if(!(window.google && google.accounts && google.accounts.oauth2)) return;
+  try{
+    const tc=google.accounts.oauth2.initTokenClient({
+      client_id: getClientId(),
+      scope: DRIVE_SCOPE,
+      ux_mode: 'popup',
+      callback: function(resp){
+        if(resp && resp.access_token){ storeToken(resp.access_token, parseInt(resp.expires_in||'3600',10)); setSyncStatus('synced'); syncNow('startup'); }
+      },
+      error_callback: function(){ if(syncStatus!=='error') setSyncStatus('disconnected'); }
+    });
+    tc.requestAccessToken({ prompt: '' });
+  }catch(e){ setSyncStatus('disconnected'); }
+}
+async function driveFetch(path, opts){
+  const tok=getValidToken(); if(!tok) throw new Error('no token');
+  const res=await fetch(DRIVE_API+path, Object.assign({}, opts||{}, { headers: Object.assign({ Authorization:'Bearer '+tok }, (opts&&opts.headers)||{}) }));
+  return res;
+}
+async function findMovieFile(){
+  const q=encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
+  const res=await driveFetch('/files?q='+q+'&fields='+encodeURIComponent('files(id,name,createdTime)')+'&orderBy=createdTime');
+  if(!res.ok) throw new Error('files.list HTTP '+res.status);
+  const j=await res.json();
+  const files=(j.files||[]).filter(f=>f.name===DRIVE_FILE_NAME);
+  return files.length ? files[0] : null;
+}
+async function downloadMovie(fileId){
+  const res=await driveFetch('/files/'+encodeURIComponent(fileId)+'?alt=media');
+  if(!res.ok) throw new Error('download HTTP '+res.status);
+  const text=await res.text();
+  return normalizeData(JSON.parse(text));
+}
+async function uploadMovieUpdate(fileId, data){
+  const tok=getValidToken(); if(!tok) throw new Error('no token');
+  const res=await fetch(UPLOAD_API+'/files/'+encodeURIComponent(fileId)+'?uploadType=media', {
+    method:'PATCH',
+    headers:{ Authorization:'Bearer '+tok, 'Content-Type':'application/json' },
+    body: JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error('update HTTP '+res.status);
+}
+async function createMovie(data){
+  const tok=getValidToken(); if(!tok) throw new Error('no token');
+  const meta={ name:DRIVE_FILE_NAME, mimeType:'application/json' };
+  const form=new FormData();
+  form.append('metadata', new Blob([JSON.stringify(meta)], { type:'application/json' }));
+  form.append('file', new Blob([JSON.stringify(data)], { type:'application/json' }), DRIVE_FILE_NAME);
+  const res=await fetch(UPLOAD_API+'/files?uploadType=multipart&fields=id', { method:'POST', headers:{ Authorization:'Bearer '+tok }, body: form });
+  if(!res.ok) throw new Error('create HTTP '+res.status);
+  return res.json();
+}
+async function syncNow(reason){
+  if(syncRunning) return;
+  const tok=getValidToken();
+  if(!tok){ setSyncStatus('disconnected'); return; }
+  syncRunning=true; setSyncStatus('syncing');
+  try{
+    const file=await findMovieFile();
+    if(!file){
+      await createMovie(DB); /* the app itself creates movie.json on first connect */
+    } else {
+      const remote=await downloadMovie(file.id);
+      if(remote && remote.updatedAt>DB.updatedAt){
+        DB=remote; saveLocal(); renderAll();
+      } else if(DB.updatedAt>(remote?remote.updatedAt:0)){
+        await uploadMovieUpdate(file.id, DB);
+      }
+    }
+    lastSyncAt=Date.now();
+    setSyncStatus('synced');
+  }catch(e){
+    setSyncStatus('error', (e && e.message) ? e.message : String(e));
+  }finally{
+    syncRunning=false;
+  }
+}
+
+/* ================= self update ================= */
+const APP_VERSION='1.5';
+function splashGo(){
+  const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
+  sp.classList.remove('wait'); sp.classList.add('hide');
+  setTimeout(()=>{ try{ sp.remove(); }catch(e){} }, 520);
+}
+function checkForUpdate(){
+  if(location.hash && location.hash.indexOf('access_token')>=0){ splashGo(); return; }
+  try{
+    fetch(location.pathname+'?cv='+Date.now(), { cache:'no-store' })
+      .then(r=>r.text())
+      .then(t=>{
+        const m=t.match(/name="app-version" content="([0-9.]+)"/);
+        if(!m){ splashGo(); return; }
+        const latest=m[1];
+        if(latest===APP_VERSION){ splashGo(); return; }
+        let tried=null;
+        try{ tried=sessionStorage.getItem('movie.updateTried'); }catch(e){}
+        if(tried===latest){ splashGo(); return; }
+        try{ sessionStorage.setItem('movie.updateTried', latest); }catch(e){}
+        location.replace(location.pathname+'?u='+Date.now());
+      })
+      .catch(()=>{ splashGo(); });
+  }catch(e){ splashGo(); }
+}
+let hiddenAt=0;
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){ hiddenAt=Date.now(); return; }
+  if(hiddenAt && Date.now()-hiddenAt>=60000) checkForUpdate();
+});
+/* iOS :active support */
+document.addEventListener('touchstart', function(){}, { passive:true });
+
+/* ================= init ================= */
+(function init(){
+  loadLocal();
+  const sp=$('splash');
+  if(sp){
+    sp.addEventListener('click', splashGo);
+    if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) splashGo();
+    setTimeout(splashGo, 1500);
+    setTimeout(()=>{ try{ sp.remove(); }catch(e){} }, 2800);
+  }
+  renderAll();
+  const authResult=checkAuthRedirect();
+  renderSyncStatus();
+  if(authResult==='token'){
+    setSyncStatus('syncing');
+    setTimeout(()=>syncNow('connect'), 300);
+  } else if(authResult==='error'){
+    /* keep the auth error visible */
+  } else if(isDriveConnected()){
+    setTimeout(()=>syncNow('startup'), 300);
+  } else if(storeGet(LS_AUTH_ERR)){
+    setSyncStatus('error', storeGet(LS_AUTH_ERR));
+  } else {
+    setTimeout(trySilentRefresh, 800);
+  }
+  checkForUpdate();
+})();
+</script>
+</body>
+</html>
