@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="1.10">
+<meta name="app-version" content="1.11">
 <title>映画</title>
 <meta name="application-name" content="映画">
 <meta name="apple-mobile-web-app-title" content="映画">
@@ -11,7 +11,6 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000000">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { background: #000000; }
@@ -145,6 +144,8 @@
   .ftitle { font-size: calc(var(--fs) * 1.02); font-weight: 700; line-height: 1.4; }
   .forig { font-size: calc(var(--fs) * .8); color: var(--muted); margin-top: 1px; }
   .fmeta { font-size: calc(var(--fs) * .82); color: var(--muted); margin-top: 2px; }
+  .provline { font-size: calc(var(--fs) * .8); color: var(--accent); margin-top: 3px; }
+  .provline:empty { display: none; }
   .hook { font-size: calc(var(--fs) * .9); margin-top: 6px; }
   .scorebox { text-align: center; flex: none; }
   .scorebox .num { font-size: 26px; font-weight: 800; color: var(--gold); line-height: 1.1; }
@@ -234,6 +235,8 @@
   #lightbox .cap { margin-top: 14px; text-align: center; }
   #lightbox .cap .t { font-weight: 700; font-size: calc(var(--fs) * 1.05); }
   #lightbox .cap .m { color: var(--muted); font-size: calc(var(--fs) * .82); margin-top: 2px; }
+  #lbprov { color: var(--muted); font-size: calc(var(--fs) * .8); margin-top: 8px; white-space: pre-line; line-height: 1.7; }
+  #lbprov:empty { display: none; }
   #lbclose {
     position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); right: 12px;
     width: 48px; height: 48px; border-radius: 50%; background: var(--card);
@@ -294,7 +297,7 @@
   <div id="lightbox" onclick="if(event.target===this) closeLightbox()">
     <button id="lbclose" onclick="closeLightbox()" aria-label="閉じる">✕</button>
     <img id="lbimg" alt="ポスター拡大" onclick="closeLightbox()">
-    <div class="cap"><div class="t" id="lbtitle"></div><div class="m" id="lbmeta"></div></div>
+    <div class="cap"><div class="t" id="lbtitle"></div><div class="m" id="lbmeta"></div><div id="lbprov"></div></div>
   </div>
 
 <script>
@@ -323,89 +326,85 @@ const AXES = [
 ];
 const AXIS_KEYS = AXES.map(a=>a.key);
 const CATALOG = [
-{"key":"under-the-skin","title":"アンダー・ザ・スキン","titleOrig":"Under the Skin","year":2013,"director":"ジョナサン・グレイザー","runtime":108,"genres":["SF","ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/7gT56rtetoUhOkuDV1NBG2hf8JX.jpg","hook":"美しい女が男を誘い、黒い液体に沈めていく。浜辺の一場面が、残酷な描写なしで深く刺さる。","axes":{"shock":4,"unease":5,"beauty":5,"aftertaste":5,"gore":2,"quiet":5,"difficulty":4}},
-{"key":"sacred-deer","title":"聖なる鹿殺し","titleOrig":"The Killing of a Sacred Deer","year":2017,"director":"ヨルゴス・ランティモス","runtime":121,"genres":["スリラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/1hJrAKmmJHUm5ntS0zbUWoaOy9J.jpg","hook":"冒頭はいきなり心臓手術の映像。感情が平坦なまま、家族が静かに追い詰められていく。","axes":{"shock":3.5,"unease":5,"beauty":4,"aftertaste":4.5,"gore":2,"quiet":4,"difficulty":3.5}},
-{"key":"saint-maud","title":"セイント・モード／狂信","titleOrig":"Saint Maud","year":2019,"director":"ローズ・グラス","runtime":84,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/pCxJkN9FkD4xEfFZwqlGdVyu7IL.jpg","hook":"信仰に取り憑かれた看護師。自己懲罰の積み重ねの先、ラスト数秒の切り返しで全体が裏返る。","axes":{"shock":4.5,"unease":4.5,"beauty":3.5,"aftertaste":4.5,"gore":3,"quiet":3.5,"difficulty":2.5}},
-{"key":"talk-to-me","title":"トーク・トゥ・ミー","titleOrig":"Talk to Me","year":2022,"director":"ダニー＆マイケル・フィリッポウ","runtime":94,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/hCyXUslWFh2sCN5zlUfEclDUaAZ.jpg","hook":"降霊ごっこが本物になる。机の角の場面は音と執拗さで直球にやばい、今のA24ホラーの正面。","axes":{"shock":5,"unease":4,"beauty":2.5,"aftertaste":3.5,"gore":4.5,"quiet":1.5,"difficulty":1.5}},
-{"key":"green-room","title":"グリーン・ルーム","titleOrig":"Green Room","year":2015,"director":"ジェレミー・ソルニエ","runtime":95,"genres":["スリラー","ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/scADHEhITX3HtgX7t9vTffd8vkb.jpg","hook":"ネオナチのライブハウスに閉じ込められるパンクバンド。負傷の見せ方が事故映像のように痛い。","axes":{"shock":4.5,"unease":4.5,"beauty":2,"aftertaste":3.5,"gore":5,"quiet":1.5,"difficulty":1.5}},
-{"key":"the-witch","title":"ウィッチ","titleOrig":"The Witch","year":2015,"director":"ロバート・エガース","runtime":92,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/r7HG7XnbuntY0vINlGhm71ASoKv.jpg","hook":"冒頭の赤ん坊の場面で掴まれる。派手さではなく、清教徒の家族が静かに壊れていく怖さ。","axes":{"shock":3.5,"unease":5,"beauty":4,"aftertaste":4.5,"gore":3,"quiet":4.5,"difficulty":3}},
-{"key":"green-knight","title":"グリーン・ナイト","titleOrig":"The Green Knight","year":2021,"director":"デヴィッド・ロウリー","runtime":130,"genres":["ファンタジー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/pBeDPFrS8rX8onMwHJDsbR9zlVg.jpg","hook":"首切りゲームから始まる騎士の旅。暴力は少ないのに、絵の強さがずっと残る。","axes":{"shock":3,"unease":3.5,"beauty":5,"aftertaste":4.5,"gore":2.5,"quiet":4.5,"difficulty":4}},
-{"key":"lamb","title":"LAMB／ラム","titleOrig":"Lamb","year":2021,"director":"ヴァルディマル・ヨハンソン","runtime":106,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/plopeUGMQH2NMLeLv7neZLR5lVq.jpg","hook":"羊と人のあいだの子が生まれ、夫婦が普通に愛し育て始める。その『普通さ』の違和感。","axes":{"shock":3.5,"unease":4,"beauty":4,"aftertaste":4,"gore":2,"quiet":5,"difficulty":3}},
-{"key":"uncut-gems","title":"アンカット・ダイヤモンド","titleOrig":"Uncut Gems","year":2019,"director":"ジョシュ＆ベニー・サフディ","runtime":135,"genres":["スリラー","犯罪"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/7Q4STBVQ8M62WBCfL5DUQxnqunr.jpg","hook":"グロではなく緊張で殴る2時間。心拍数が上がったまま、ラストで一気に落とされる。","axes":{"shock":3.5,"unease":4,"beauty":2.5,"aftertaste":4,"gore":2,"quiet":0.5,"difficulty":2}},
-{"key":"good-time","title":"グッド・タイム","titleOrig":"Good Time","year":2017,"director":"ジョシュ＆ベニー・サフディ","runtime":102,"genres":["スリラー","犯罪"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/5OKWdebuIQw6FS1TVHN2D7fhh3B.jpg","hook":"一晩中トラブルが悪化し続ける。ネオンの夜と電子音楽、焦燥そのものが衝撃の連続。","axes":{"shock":3,"unease":4,"beauty":3,"aftertaste":3.5,"gore":2,"quiet":1,"difficulty":1.5}},
-{"key":"enemy","title":"エネミー","titleOrig":"Enemy","year":2013,"director":"ドゥニ・ヴィルヌーヴ","runtime":91,"genres":["スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/kxHxeM9f3sTUO4dd437ZjddW0wf.jpg","hook":"自分と瓜二つの男。衝撃は最後の数秒に全部集中していて、『え？』で終わる。","axes":{"shock":4.5,"unease":4.5,"beauty":3.5,"aftertaste":5,"gore":1.5,"quiet":3.5,"difficulty":4.5}},
-{"key":"it-comes-at-night","title":"イット・カムズ・アット・ナイト","titleOrig":"It Comes at Night","year":2017,"director":"トレイ・エドワード・シュルツ","runtime":91,"genres":["ホラー","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/mGRZ0kYYxpXMU8Bv9NFduxLSOhk.jpg","hook":"何が起きたか最後まで断定しない。怪物ではなく、人間同士の疑いが行き着く先が怖い。","axes":{"shock":3,"unease":5,"beauty":3.5,"aftertaste":4.5,"gore":2.5,"quiet":4,"difficulty":3.5}},
-{"key":"the-whale","title":"ザ・ホエール","titleOrig":"The Whale","year":2022,"director":"ダーレン・アロノフスキー","runtime":117,"genres":["ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/raziaximLmyODyTxGE4BpvVB7Xi.jpg","hook":"アパートの一室、1人の身体と演技に全部賭ける。過食の長回しと、死にかけの緊張が続く。","axes":{"shock":3.5,"unease":3,"beauty":3,"aftertaste":4.5,"gore":2.5,"quiet":3.5,"difficulty":1.5}},
-{"key":"a-ghost-story","title":"A GHOST STORY／ア・ゴースト・ストーリー","titleOrig":"A Ghost Story","year":2017,"director":"デヴィッド・ロウリー","runtime":92,"genres":["ドラマ","ファンタジー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/hLrBdA8RkiR80GWaNCO9CQWgS1q.jpg","hook":"シーツの幽霊が、時間の流れをただ見つめる。衝撃の場面はないのにラストが全部効いてくる。","axes":{"shock":2,"unease":3,"beauty":5,"aftertaste":5,"gore":0,"quiet":5,"difficulty":3.5}},
-{"key":"first-reformed","title":"魂のゆくえ","titleOrig":"First Reformed","year":2017,"director":"ポール・シュレイダー","runtime":113,"genres":["ドラマ","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/wE6rYOAfW4vBVut57aSctBZ4iHD.jpg","hook":"牧師の信仰と絶望が静かに臨界へ向かう。抑制された画面の向こうの炎。","axes":{"shock":3.5,"unease":4,"beauty":4,"aftertaste":5,"gore":2,"quiet":5,"difficulty":3.5}},
-{"key":"ex-machina","title":"エクス・マキナ","titleOrig":"Ex Machina","year":2014,"director":"アレックス・ガーランド","runtime":108,"genres":["SF","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/vQ88OEeV11DEBRJx6Dj8zwaCwDN.jpg","hook":"閉じた邸宅でAIと対話する。整った近代建築の内側で、少しずつ立場が反転していく。","axes":{"shock":3.5,"unease":4,"beauty":4.5,"aftertaste":4,"gore":2.5,"quiet":3.5,"difficulty":2.5}},
-{"key":"the-lobster","title":"ロブスター","titleOrig":"The Lobster","year":2015,"director":"ヨルゴス・ランティモス","runtime":119,"genres":["ドラマ","SF"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/gsFAqzdCfdKoyn4xdHbisSNGipj.jpg","hook":"恋人を見つけられなければ動物にされる世界。棒読みの演技と不条理な規則の気持ち悪さ。","axes":{"shock":3,"unease":4,"beauty":3.5,"aftertaste":4,"gore":2.5,"quiet":3.5,"difficulty":3.5}},
-{"key":"swiss-army-man","title":"スイス・アーミー・マン","titleOrig":"Swiss Army Man","year":2016,"director":"ダニエルズ","runtime":97,"genres":["コメディ","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/pHEciKLOeUJPudb2NIICLPGZIWa.jpg","hook":"万能な死体と無人島を脱出する。下品な設定の下に、意外なくらい純粋な孤独がある。","axes":{"shock":2.5,"unease":2,"beauty":3.5,"aftertaste":4,"gore":1.5,"quiet":2,"difficulty":2.5}},
-{"key":"blue-velvet","title":"ブルーベルベット","titleOrig":"Blue Velvet","year":1986,"director":"デヴィッド・リンチ","runtime":120,"genres":["スリラー","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/4Js6iIePIWWAScKixmXt7yW3PvU.jpg","hook":"整った郊外の芝生の下に虫が蠢く。『美しい表面の下に決定的におかしいもの』の原型。","axes":{"shock":4,"unease":4.5,"beauty":4.5,"aftertaste":5,"gore":3.5,"quiet":2.5,"difficulty":3}},
-{"key":"possession","title":"ポゼッション","titleOrig":"Possession","year":1981,"director":"アンジェイ・ズラウスキー","runtime":124,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/fF3vm3EIQ9TnpxZLlsvRB0GwsQH.jpg","hook":"地下鉄の通路でイザベル・アジャーニが身をよじり続ける長回し。演技の強度が理性を追い越す。","axes":{"shock":5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":4.5,"quiet":1.5,"difficulty":5}},
-{"key":"cure","title":"キュア","titleOrig":"CURE","year":1997,"director":"黒沢清","runtime":111,"genres":["ホラー","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/2KR0IDLxBIW3nQfS69o63BLeRWJ.jpg","hook":"喉に×印を刻む連続殺人。催眠の静けさと、水と風の音だけが残る日本産の不穏。","axes":{"shock":3.5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":3,"quiet":5,"difficulty":4}},
-{"key":"audition","title":"オーディション","titleOrig":"オーディション","year":1999,"director":"三池崇史","runtime":115,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/hkjpeUkXbsCjj0FrG1nNxVCxUid.jpg","hook":"前半の穏やかな恋愛劇が、ある電話の音から静かに反転する。『キリキリキリ』。","axes":{"shock":5,"unease":4.5,"beauty":3,"aftertaste":4.5,"gore":5,"quiet":3,"difficulty":2.5}},
-{"key":"perfect-blue","title":"パーフェクトブルー","titleOrig":"Perfect Blue","year":1997,"director":"今敏","runtime":81,"genres":["アニメ","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/79vujbsWEbX4dzffBV541QXN6sf.jpg","hook":"アイドルから女優へ転身する少女の現実が溶けていく。アニメでしかできない編集の悪夢。","axes":{"shock":4,"unease":4.5,"beauty":4,"aftertaste":4.5,"gore":3.5,"quiet":2,"difficulty":4}},
-{"key":"climax","title":"クライマックス","titleOrig":"Climax","year":2018,"director":"ギャスパー・ノエ","runtime":96,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/3yYb8iKnr1NAd1FGY5PyPjUxW4j.jpg","hook":"ダンサーたちの祝宴が一つの混入物で地獄に変わる。長回しのカメラが逃げ場を消していく。","axes":{"shock":4.5,"unease":4.5,"beauty":4.5,"aftertaste":4,"gore":3.5,"quiet":1,"difficulty":3}},
-{"key":"mother","title":"マザー！","titleOrig":"mother!","year":2017,"director":"ダーレン・アロノフスキー","runtime":121,"genres":["ホラー","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/2Uo8UDDq2d4BACzhKVl73TNUeCQ.jpg","hook":"招かれざる客が増え続け、家そのものが崩壊していく後半の加速。寓話の暴力。","axes":{"shock":4.5,"unease":4.5,"beauty":3.5,"aftertaste":4.5,"gore":4,"quiet":1.5,"difficulty":3.5}},
-{"key":"suspiria","title":"サスペリア","titleOrig":"Suspiria","year":1977,"director":"ダリオ・アルジェント","runtime":98,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/x55c8ABNRzG2f2OjBTNHMcjvtXb.jpg","hook":"原色の光とゴブリンの音楽。バレエ学校という整った場所の下にいる魔女たち。","axes":{"shock":4,"unease":4.5,"beauty":5,"aftertaste":4.5,"gore":4.5,"quiet":2.5,"difficulty":3}},
-{"key":"antichrist","title":"アンチクライスト","titleOrig":"Antichrist","year":2009,"director":"ラース・フォン・トリアー","runtime":108,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/eVO7fTYGQzFSWKgvCNbbMfnk2Gi.jpg","hook":"森の山小屋、喪失と狂気。美しいスローモーションと耐えがたい暴力が同居する。","axes":{"shock":5,"unease":5,"beauty":4.5,"aftertaste":4.5,"gore":5,"quiet":3.5,"difficulty":4.5}},
-{"key":"inland-empire","title":"インランド・エンパイア","titleOrig":"Inland Empire","year":2006,"director":"デヴィッド・リンチ","runtime":180,"genres":["ミステリー","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/fpo5azURhr4fVh4cB4kitabshdv.jpg","hook":"3時間、夢の論理だけで進む。説明を求めると負ける、感覚で沈むための映画。","axes":{"shock":3.5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":2.5,"quiet":3,"difficulty":5}},
-{"key":"kill-list","title":"キル・リスト","titleOrig":"Kill List","year":2011,"director":"ベン・ウィートリー","runtime":95,"genres":["ホラー","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/qwT2I3ons0oD58jIppKmd4qLtvB.jpg","hook":"ヒットマンの仕事映画として整って始まり、共同体の儀式へ滑り落ちる。ミッドサマーの「共同体が正気の顔で狂っている」の祖先。","axes":{"shock":4.5,"unease":4.5,"beauty":3,"aftertaste":4.5,"gore":4.5,"quiet":3,"difficulty":3.5}},
-{"key":"the-wailing","title":"哭声／コクソン","titleOrig":"The Wailing","year":2016,"director":"ナ・ホンジン","runtime":156,"genres":["ホラー","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/nRrhrNWcPVgVR5qQdFy4fmLvyKZ.jpg","hook":"韓国の村、祈祷、悪魔。誰が正しいのか最後まで確定せず、家族を守る行為が呪いになる。余韻が最大級。","axes":{"shock":4.5,"unease":5,"beauty":4,"aftertaste":5,"gore":4,"quiet":3,"difficulty":4}},
-{"key":"relic","title":"レリック -遺物-","titleOrig":"Relic","year":2020,"director":"ナタリー・エリカ・ジェームズ","runtime":89,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/xGwN4Cjk6hUWWBwvHVBsKdQIrwi.jpg","hook":"認知症の母の家そのものが迷路化する。派手な衝撃でなく、家と家族が腐っていく静かな型。","axes":{"shock":3.5,"unease":4.5,"beauty":3.5,"aftertaste":4.5,"gore":2.5,"quiet":4.5,"difficulty":3}},
-{"key":"hagazussa","title":"ハガズサ","titleOrig":"Hagazussa","year":2017,"director":"ルーカス・ファイゲルフェルト","runtime":102,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/bGU0l4AJrBThDepVt34gEtnPbxj.jpg","hook":"15世紀の山小屋、母と娘。ウィッチの時代・宗教・孤立をさらに言葉少なくした版で、美しさと不潔さが同居する。","axes":{"shock":3.5,"unease":5,"beauty":4.5,"aftertaste":4.5,"gore":4,"quiet":5,"difficulty":4.5}},
-{"key":"november","title":"ノベンバー","titleOrig":"November","year":2017,"director":"ライネル・サルネット","runtime":115,"genres":["ファンタジー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/5gmQ6k4NWQQ0vlZ5KXtN3iLIPT9.jpg","hook":"エストニアの民話世界。白黒の映像美が際立ち、悪魔との取引が日常として描かれる。気高さの軸が強い。","axes":{"shock":3,"unease":4.5,"beauty":4,"aftertaste":4,"gore":3,"quiet":4.5,"difficulty":4.5}},
-{"key":"thelma","title":"テルマ","titleOrig":"Thelma","year":2017,"director":"ヨアキム・トリアー","runtime":116,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/l3ciaQdEBQdlOP2Bkc7BV7VkPdK.jpg","hook":"敬虔な家庭から大学へ出た少女の力が漏れ出す。整った北欧の表面と、その下の抑圧。","axes":{"shock":3.5,"unease":4,"beauty":4,"aftertaste":4,"gore":2,"quiet":4,"difficulty":3}},
-{"key":"border","title":"ボーダー 二つの世界","titleOrig":"Border","year":2018,"director":"アリ・アッバシ","runtime":110,"genres":["ファンタジー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/lY2cMPndCOcOyPFSeCpq9fN1CCa.jpg","hook":"匂いで嘘が分かる税関職員の女。自分の正体の判明が、世界の見え方を裏返す。「決定的に間違ったもの」が主人公自身の中にある型。","axes":{"shock":4,"unease":4,"beauty":4.5,"aftertaste":4,"gore":3,"quiet":4,"difficulty":3}},
-{"key":"his-house","title":"His House／選ばれた家","titleOrig":"His House","year":2020,"director":"レミ・ウィークス","runtime":93,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/s6XxJEe4ovVTMgmGmKeO87OFANU.jpg","hook":"亡命先の公営住宅に何かがいる。家のホラーと亡命者の罪悪感が重なる密室の一本。","axes":{"shock":4,"unease":4.5,"beauty":3,"aftertaste":4,"gore":3,"quiet":3.5,"difficulty":2.5}},
-{"key":"burning","title":"バーニング 劇場版","titleOrig":"Burning","year":2018,"director":"イ・チャンドン","runtime":148,"genres":["ミステリー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/hxGv1O2W5SOJTmiBc45CL842mrx.jpg","hook":"村上春樹原作。何も起きていないのに全部がおかしい。関心領域の「見えない地獄」を、犯罪の気配でやる一本。","axes":{"shock":3,"unease":5,"beauty":5,"aftertaste":5,"gore":1,"quiet":5,"difficulty":4.5}},
-{"key":"funny-games","title":"ファニーゲーム","titleOrig":"Funny Games","year":1997,"director":"ミヒャエル・ハネケ","runtime":109,"genres":["スリラー","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/rlbznhqKycQkWw9agSO5vadTHWJ.jpg","hook":"礼儀正しい青年2人が、整った別荘の日常を壊す。観客への巻き戻しの一手は今も衝撃の設計として別格。","axes":{"shock":5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":4,"quiet":4,"difficulty":3.5}},
-{"key":"it-follows","title":"イット・フォローズ","titleOrig":"It Follows","year":2014,"director":"デヴィッド・ロバート・ミッチェル","runtime":100,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/oPl77Ih2CV2rJZdDUqWr2rYKpg3.jpg","hook":"美しいアメリカ郊外を「それ」が歩いて追ってくる。ブルーベルベットの郊外の芝生の下を、ホラーの規則1つでやった映画。","axes":{"shock":3.5,"unease":5,"beauty":4.5,"aftertaste":4,"gore":2,"quiet":4,"difficulty":3}},
-{"key":"safe","title":"セイフ","titleOrig":"Safe","year":1995,"director":"トッド・ヘインズ","runtime":119,"genres":["ドラマ","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/tBcan8HDI6Jt4SlDBZ1aM1189Gu.jpg","hook":"整った郊外住宅と優しい夫の下で、主婦の体だけが壊れていく。原因が最後まで確定しない、グロなしで不穏さ最大の証明。","axes":{"shock":3,"unease":5,"beauty":4.5,"aftertaste":5,"gore":0.5,"quiet":5,"difficulty":4}},
-{"key":"cache","title":"隠された記憶","titleOrig":"Caché","year":2005,"director":"ミヒャエル・ハネケ","runtime":117,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/vSIGVNCLDnw1NYH8mgSrxC5jYQn.jpg","hook":"自宅を撮ったビデオテープが届く。犯人探しの形で、植民地の記憶と家庭の嘘が滲む。静けさと難解さの上限サンプル。","axes":{"shock":3.5,"unease":5,"beauty":4.5,"aftertaste":4.5,"gore":2,"quiet":5,"difficulty":4.5}},
-{"key":"the-invitation","title":"インヴィテーション","titleOrig":"The Invitation","year":2015,"director":"カリン・クサマ","runtime":100,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/l9Z79zPrib1t10ymodQeRIDFUSN.jpg","hook":"元妻の新居でのディナー会。親切な表面の下に何かある、という感覚だけで引っ張り、最後に絵で答える密室会話劇。","axes":{"shock":3.5,"unease":4.5,"beauty":3.5,"aftertaste":4,"gore":3,"quiet":3.5,"difficulty":2}},
-{"key":"annihilation","title":"アナイアレイション -全滅領域-","titleOrig":"Annihilation","year":2018,"director":"アレックス・ガーランド","runtime":115,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/x2yDlZJrKwSvrJzp5C1oOMyQy7N.jpg","hook":"光を屈折させる領域の中で、自然が美しく間違っていく。MEN／エクス・マキナのガーランドの「世界観で見る」一本。","axes":{"shock":4,"unease":4.5,"beauty":5,"aftertaste":4.5,"gore":4,"quiet":3.5,"difficulty":4}},
-{"key":"coherence","title":"コヒーレンス","titleOrig":"Coherence","year":2013,"director":"ジェームズ・ワード・バーキット","runtime":89,"genres":["SF","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/ezUtb9m5DeLwL2gxi4gktzNCvQv.jpg","hook":"彗星の夜のホームパーティで現実が分岐する。低予算・ほぼ一軒家で「日常の裏側」をやる最小構成。","axes":{"shock":4,"unease":4,"beauty":2.5,"aftertaste":3.5,"gore":0.5,"quiet":2.5,"difficulty":3.5}},
-{"key":"raw","title":"RAW -少女のめざめ-","titleOrig":"Raw","year":2016,"director":"ジュリア・デュクルノー","runtime":99,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/f2VwZTtOf3Sdg8Smnnb4fcTk0t6.jpg","hook":"ベジタリアンの獣医学生が肉に目覚める。美しい画面で、身体の欲望が一段ずつ外れていく。","axes":{"shock":4.5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":5,"quiet":2.5,"difficulty":2.5}},
-{"key":"bones-and-all","title":"ボーンズ アンド オール","titleOrig":"Bones and All","year":2022,"director":"ルカ・グァダニーノ","runtime":130,"genres":["ホラー","ロマンス"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/8IPyO90Hu0nbGaJAq6eeBz2fukN.jpg","hook":"人を食べる若者たちのロードムービーを、最も美しい恋愛映画の顔で撮る。「美しい表面の下に決定的に間違ったもの」の恋愛版。","axes":{"shock":3.5,"unease":4,"beauty":5,"aftertaste":5,"gore":4.5,"quiet":3.5,"difficulty":2.5}},
-{"key":"titane","title":"TITANE／チタン","titleOrig":"Titane","year":2021,"director":"ジュリア・デュクルノー","runtime":108,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/jImosD860cSduxTwfogZ3C7ajOI.jpg","hook":"頭にチタンプレート、車、殺人、偽装。身体変容の先をいく、荒さと品格が同居する一本。","axes":{"shock":5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":2,"difficulty":4}},
-{"key":"possessor","title":"ポゼッサー","titleOrig":"Possessor","year":2020,"director":"ブランドン・クローネンバーグ","runtime":103,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/gQQxVmTKxCH0u2xU68VDxipNRd3.jpg","hook":"他人の身体に乗り移って暗殺する女。ポゼッション(1981)と名前で対になる現代版。身体と人格の境界の崩れ。","axes":{"shock":4.5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":3,"difficulty":3.5}},
-{"key":"crimes-of-the-future","title":"クライムズ・オブ・ザ・フューチャー","titleOrig":"Crimes of the Future","year":2022,"director":"デヴィッド・クローネンバーグ","runtime":107,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/1lCklZ9Ad49TM264RCsR1ClWELS.jpg","hook":"内臓を育てて公開手術する芸術家の世界。静かで難解な方の身体ホラー。","axes":{"shock":3.5,"unease":4,"beauty":4.5,"aftertaste":4,"gore":4.5,"quiet":4.5,"difficulty":4.5}},
-{"key":"infinity-pool","title":"インフィニティ・プール","titleOrig":"Infinity Pool","year":2023,"director":"ブランドン・クローネンバーグ","runtime":117,"genres":["ホラー","SF"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/4KgsdUToiyAVzTVfJBfMm5iJLrQ.jpg","hook":"高級リゾートの整った楽園と、自分の複製が処刑される制度。ミッドサマーの「明るいリゾート共同体」の毒をSFで。","axes":{"shock":4.5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":2,"difficulty":2.5}},
-{"key":"goodnight-mommy","title":"グッドナイト・マミー","titleOrig":"Goodnight Mommy","year":2014,"director":"監督名未記載（調査ファイルに記載なし）","runtime":99,"genres":["ホラー","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/eMNYF8D3Qo8CNXwvZ52IsoCUk72.jpg","hook":"包帯で顔を覆った母親を、双子が「本物か」と疑う。整ったモダンな家と子どもの視線。顔が隠れていること自体が不穏さになる。オーストリア製作。","axes":{"shock":4.5,"unease":5,"beauty":4,"aftertaste":4,"gore":3,"quiet":4,"difficulty":3.5}},
-{"key":"color-out-of-space","title":"カラー・アウト・オブ・スペース","titleOrig":"Color Out of Space","year":2019,"director":"リチャード・スタンリー","runtime":111,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/ocbtFL8Nt7XkMUxjooFC3BxGxfl.jpg","hook":"ラヴクラフト原作。隕石の色で農場と家族が変質する。色彩の美しさがそのまま汚染の表現になる型。","axes":{"shock":4,"unease":4,"beauty":4.5,"aftertaste":3.5,"gore":4,"quiet":2,"difficulty":3}},
-{"key":"dogtooth","title":"籠の中の乙女","titleOrig":"Dogtooth","year":2009,"director":"ヨルゴス・ランティモス","runtime":97,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/9VwqmjGv2J7wO5JlGqLQeexlSi3.jpg","hook":"ランティモスの原点。外界を知らずに育てられた子どもたちと、整った家庭の規則。聖なる鹿殺し／ロブスターへ連なる系譜の最初。","axes":{"shock":4,"unease":5,"beauty":3.5,"aftertaste":4.5,"gore":3,"quiet":4,"difficulty":3.5}},
-{"key":"kevin","title":"少年は残酷な弓を射る","titleOrig":"We Need to Talk About Kevin","year":2011,"director":"リン・ラムジー","runtime":112,"genres":["ドラマ","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/wNzwSVhydTtMH0L5pR3Z9wC0ZaU.jpg","hook":"母と息子。事件そのものより、その前後の日常の赤が刺さる。家族の喪失と罪悪感の静かな版。","axes":{"shock":4,"unease":4.5,"beauty":4,"aftertaste":5,"gore":3,"quiet":3,"difficulty":3}},
-{"key":"the-skin-i-live-in","title":"私が、生きる肌","titleOrig":"The Skin I Live In","year":2011,"director":"ペドロ・アルモドバル","runtime":120,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/dAu4gPiwzMyXNrpghxgQLPYYKaI.jpg","hook":"整形外科医の整った邸宅と、監禁された女。美しい画面のまま、倫理だけが一段ずつ崩れる。反転の設計が見事。","axes":{"shock":4.5,"unease":4.5,"beauty":4.5,"aftertaste":4.5,"gore":3.5,"quiet":3.5,"difficulty":3}},
-{"key":"morvern-callar","title":"モーヴァン・カラー","titleOrig":"Morvern Callar","year":2002,"director":"リン・ラムジー","runtime":97,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/kKGUF97v8a62MtSKM0V6fqDxGTS.jpg","hook":"死体と一緒に旅することになった女の、静かな再生。衝撃でなく余韻と美しさの側の補充枠。","axes":{"shock":2.5,"unease":3.5,"beauty":4.5,"aftertaste":4.5,"gore":1.5,"quiet":5,"difficulty":3.5}},
-{"key":"pulse","title":"回路","titleOrig":"Pulse","year":2001,"director":"黒沢清","runtime":119,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/talt2heBA5jty9jfcMvuQcOEsEC.jpg","hook":"キュアの監督。ネットに繋いだ部屋から人が消える。赤いテープの部屋と、誰もいない東京。静けさと余韻の日本側の極。","axes":{"shock":3.5,"unease":5,"beauty":4,"aftertaste":5,"gore":1.5,"quiet":5,"difficulty":4}},
-{"key":"confessions","title":"告白","titleOrig":"Confessions","year":2010,"director":"中島哲也","runtime":106,"genres":["ドラマ","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/p8vr7jVwflsSqAq91nWcOPZ2RIv.jpg","hook":"整った教室と美しいスローモーションで語られる復讐。表面の美しさと内容の冷たさの落差。","axes":{"shock":4,"unease":4,"beauty":5,"aftertaste":4.5,"gore":3,"quiet":2,"difficulty":2}},
-{"key":"cold-fish","title":"冷たい熱帯魚","titleOrig":"Cold Fish","year":2010,"director":"園子温","runtime":146,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/8jzXKuuSMNYU0jSakJkdkzQcZbL.jpg","hook":"熱帯魚店の日常が、善意の顔をした男によって解体されていく。グロ上限のテストにもなる上限サンプル。","axes":{"shock":5,"unease":4.5,"beauty":2.5,"aftertaste":4,"gore":5,"quiet":1.5,"difficulty":2}},
-{"key":"helter-skelter","title":"ヘルタースケルター","titleOrig":"Helter Skelter","year":2012,"director":"蜷川実花","runtime":127,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/rctha2z3lZ5YTCo4IE3cUJT4q2D.jpg","hook":"全身整形のモデルの美しい表面と、その下の崩壊。美しさの軸が突出した、絵画的な色彩の異色枠。","axes":{"shock":3.5,"unease":3.5,"beauty":5,"aftertaste":3.5,"gore":3.5,"quiet":1.5,"difficulty":2}},
-{"key":"memoria","title":"メモリア","titleOrig":"Memoria","year":2021,"director":"アピチャッポン・ウィーラセタクン","runtime":136,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/vg0A9jSPdXsXnsjQ5jt3BFzdW67.jpg","hook":"自分にだけ聞こえる爆発音を辿る旅。静けさ・難解さ・余韻が全部上限。aftersunの「衝撃なしで残る」方向の到達点。","axes":{"shock":2,"unease":4.5,"beauty":5,"aftertaste":5,"gore":0,"quiet":5,"difficulty":5}},
-{"key":"skinamarink","title":"スキナマリンク","titleOrig":"Skinamarink","year":2022,"director":"カイル・エドワード・ボール","runtime":100,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/h9CgK5iMb6hZE5eIQ3jLrtKPXUv.jpg","hook":"真夜中の家、子どもだけ、画面はほぼ暗闇と天井。観客の側が怖さを組み立てる低予算の実験作。難解さ上限のもう1本。","axes":{"shock":4,"unease":5,"beauty":3,"aftertaste":4.5,"gore":1,"quiet":5,"difficulty":5}},
-{"key":"nitram","title":"ニトラム","titleOrig":"Nitram","year":2021,"director":"ジャスティン・カーゼル","runtime":112,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/travctNsTHtPYsjggA13WpHQq2x.jpg","hook":"実在の事件の犯人の日常を、事件をほぼ描かずに積む。整った郊外と家族の無力さ。余韻の重さで選ぶ枠。","axes":{"shock":3.5,"unease":4.5,"beauty":3.5,"aftertaste":5,"gore":2.5,"quiet":4,"difficulty":2.5}},
-{"key":"hereditary","title":"ヘレディタリー／継承","titleOrig":"Hereditary","year":2018,"director":"アリ・アスター","runtime":127,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/t0Lr3xOB88ifQgsVFC9iadmYVc2.jpg","hook":"家族の喪失がそのまま呪いになる。あの首の場面と、音の使い方が忘れられない。","axes":{"shock":4.5,"unease":5,"beauty":4,"aftertaste":4.5,"gore":4,"quiet":3,"difficulty":3}},
-{"key":"midsommar","title":"ミッドサマー","titleOrig":"Midsommar","year":2019,"director":"アリ・アスター","runtime":148,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/8fpyy5NC1busoN4WV8dBl3eBf8q.jpg","hook":"白夜の花畑という最も明るい表面の下の崖。美しさと残酷さが同じ光で撮られている。","axes":{"shock":4.5,"unease":4.5,"beauty":5,"aftertaste":4.5,"gore":4.5,"quiet":2.5,"difficulty":3}},
-{"key":"the-lighthouse","title":"ライトハウス","titleOrig":"The Lighthouse","year":2019,"director":"ロバート・エガース","runtime":109,"genres":["ホラー","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/lTPSbEEA2J0VwAXJaDypb0003cF.jpg","hook":"孤島の灯台、2人の男、白黒の画面。狂気が潮騒と一緒に満ちてくる。","axes":{"shock":3.5,"unease":4.5,"beauty":4.5,"aftertaste":4.5,"gore":3,"quiet":3,"difficulty":4.5}},
-{"key":"x-movie","title":"X エックス","titleOrig":"X","year":2022,"director":"タイ・ウェスト","runtime":105,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/9zBOO8JUKescHhmfPdMAwYwE84o.jpg","hook":"70年代スラッシャーへの愛と、老いへの視線。殺し方の勢いが直球。","axes":{"shock":4,"unease":3.5,"beauty":3.5,"aftertaste":3,"gore":5,"quiet":2,"difficulty":1.5}},
-{"key":"pearl","title":"Pearl パール","titleOrig":"Pearl","year":2022,"director":"タイ・ウェスト","runtime":102,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/h7xwpgVCxdImnUYmYMQPK6fbl6H.jpg","hook":"テクニカラーの牧場で笑顔が崩れていく。長回しの独白がこの映画の心臓。","axes":{"shock":4,"unease":4,"beauty":4.5,"aftertaste":4,"gore":4,"quiet":2.5,"difficulty":2}},
-{"key":"aftersun","title":"aftersun／アフターサン","titleOrig":"Aftersun","year":2022,"director":"シャーロット・ウェルズ","runtime":102,"genres":["ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/juooGArBKAJcxnAqslZGpUj7pWH.jpg","hook":"父と娘の休暇のビデオ映像。衝撃の場面はないのに、ラストのダンスで全部が効いてくる。","axes":{"shock":1.5,"unease":2.5,"beauty":5,"aftertaste":5,"gore":0,"quiet":5,"difficulty":3}},
-{"key":"zone-of-interest","title":"関心領域","titleOrig":"The Zone of Interest","year":2023,"director":"ジョナサン・グレイザー","runtime":105,"genres":["ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/m62six4iJgG9hb0XX0OPT0nf7HX.jpg","hook":"塀の向こうの音だけが地獄を伝える。整った家庭の日常と、聞こえ続ける何か。","axes":{"shock":3,"unease":5,"beauty":4,"aftertaste":5,"gore":0.5,"quiet":4.5,"difficulty":3.5}},
-{"key":"tuesday","title":"終わりの鳥","titleOrig":"Tuesday","year":2023,"director":"ダイナ・O・プシッチ","runtime":110,"genres":["ドラマ","ファンタジー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/zrd6blans3SqghHSxPAl7tqnaOf.jpg","hook":"死が鳥の姿でやってくる。奇妙な設定を、母と娘の別れの物語として正面から撮る。","axes":{"shock":3,"unease":3,"beauty":3.5,"aftertaste":4.5,"gore":1.5,"quiet":3.5,"difficulty":3}},
-{"key":"love-lies-bleeding","title":"愛はステロイド","titleOrig":"Love Lies Bleeding","year":2024,"director":"ローズ・グラス","runtime":104,"genres":["スリラー","ロマンス"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/1bxOOchvNo5SDFTwZ2JljpdOGu9.jpg","hook":"筋肉と犯罪と恋。身体そのものが暴力的になっていくネオンのスリラー。","axes":{"shock":4,"unease":3.5,"beauty":3.5,"aftertaste":3.5,"gore":4,"quiet":1.5,"difficulty":2}},
-{"key":"men","title":"MEN 同じ顔の男たち","titleOrig":"Men","year":2022,"director":"アレックス・ガーランド","runtime":100,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/ilqxptpFOU85qWiSTkB491fZybr.jpg","hook":"村の男たちが全員同じ顔。ラスト20分、男が男を産む連鎖で見ていたものが崩れる。","axes":{"shock":5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":3,"difficulty":4}}
+{"key":"under-the-skin","tmdbId":97370,"title":"アンダー・ザ・スキン","titleOrig":"Under the Skin","year":2013,"director":"ジョナサン・グレイザー","runtime":108,"genres":["SF","ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/7gT56rtetoUhOkuDV1NBG2hf8JX.jpg","hook":"美しい女が男を誘い、黒い液体に沈めていく。浜辺の一場面が、残酷な描写なしで深く刺さる。","axes":{"shock":4,"unease":5,"beauty":5,"aftertaste":5,"gore":2,"quiet":5,"difficulty":4}},
+{"key":"sacred-deer","tmdbId":399057,"title":"聖なる鹿殺し","titleOrig":"The Killing of a Sacred Deer","year":2017,"director":"ヨルゴス・ランティモス","runtime":121,"genres":["スリラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/1hJrAKmmJHUm5ntS0zbUWoaOy9J.jpg","hook":"冒頭はいきなり心臓手術の映像。感情が平坦なまま、家族が静かに追い詰められていく。","axes":{"shock":3.5,"unease":5,"beauty":4,"aftertaste":4.5,"gore":2,"quiet":4,"difficulty":3.5}},
+{"key":"saint-maud","tmdbId":575776,"title":"セイント・モード／狂信","titleOrig":"Saint Maud","year":2019,"director":"ローズ・グラス","runtime":84,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/pCxJkN9FkD4xEfFZwqlGdVyu7IL.jpg","hook":"信仰に取り憑かれた看護師。自己懲罰の積み重ねの先、ラスト数秒の切り返しで全体が裏返る。","axes":{"shock":4.5,"unease":4.5,"beauty":3.5,"aftertaste":4.5,"gore":3,"quiet":3.5,"difficulty":2.5}},
+{"key":"talk-to-me","tmdbId":1008042,"title":"トーク・トゥ・ミー","titleOrig":"Talk to Me","year":2022,"director":"ダニー＆マイケル・フィリッポウ","runtime":94,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/hCyXUslWFh2sCN5zlUfEclDUaAZ.jpg","hook":"降霊ごっこが本物になる。机の角の場面は音と執拗さで直球にやばい、今のA24ホラーの正面。","axes":{"shock":5,"unease":4,"beauty":2.5,"aftertaste":3.5,"gore":4.5,"quiet":1.5,"difficulty":1.5}},
+{"key":"green-room","tmdbId":313922,"title":"グリーン・ルーム","titleOrig":"Green Room","year":2015,"director":"ジェレミー・ソルニエ","runtime":95,"genres":["スリラー","ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/scADHEhITX3HtgX7t9vTffd8vkb.jpg","hook":"ネオナチのライブハウスに閉じ込められるパンクバンド。負傷の見せ方が事故映像のように痛い。","axes":{"shock":4.5,"unease":4.5,"beauty":2,"aftertaste":3.5,"gore":5,"quiet":1.5,"difficulty":1.5}},
+{"key":"the-witch","tmdbId":274854,"title":"ウィッチ","titleOrig":"The Witch","year":2015,"director":"ロバート・エガース","runtime":92,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/r7HG7XnbuntY0vINlGhm71ASoKv.jpg","hook":"冒頭の赤ん坊の場面で掴まれる。派手さではなく、清教徒の家族が静かに壊れていく怖さ。","axes":{"shock":3.5,"unease":5,"beauty":4,"aftertaste":4.5,"gore":3,"quiet":4.5,"difficulty":3}},
+{"key":"green-knight","tmdbId":559907,"title":"グリーン・ナイト","titleOrig":"The Green Knight","year":2021,"director":"デヴィッド・ロウリー","runtime":130,"genres":["ファンタジー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/pBeDPFrS8rX8onMwHJDsbR9zlVg.jpg","hook":"首切りゲームから始まる騎士の旅。暴力は少ないのに、絵の強さがずっと残る。","axes":{"shock":3,"unease":3.5,"beauty":5,"aftertaste":4.5,"gore":2.5,"quiet":4.5,"difficulty":4}},
+{"key":"lamb","tmdbId":788929,"title":"LAMB／ラム","titleOrig":"Lamb","year":2021,"director":"ヴァルディマル・ヨハンソン","runtime":106,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/plopeUGMQH2NMLeLv7neZLR5lVq.jpg","hook":"羊と人のあいだの子が生まれ、夫婦が普通に愛し育て始める。その『普通さ』の違和感。","axes":{"shock":3.5,"unease":4,"beauty":4,"aftertaste":4,"gore":2,"quiet":5,"difficulty":3}},
+{"key":"uncut-gems","tmdbId":473033,"title":"アンカット・ダイヤモンド","titleOrig":"Uncut Gems","year":2019,"director":"ジョシュ＆ベニー・サフディ","runtime":135,"genres":["スリラー","犯罪"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/7Q4STBVQ8M62WBCfL5DUQxnqunr.jpg","hook":"グロではなく緊張で殴る2時間。心拍数が上がったまま、ラストで一気に落とされる。","axes":{"shock":3.5,"unease":4,"beauty":2.5,"aftertaste":4,"gore":2,"quiet":0.5,"difficulty":2}},
+{"key":"good-time","tmdbId":429200,"title":"グッド・タイム","titleOrig":"Good Time","year":2017,"director":"ジョシュ＆ベニー・サフディ","runtime":102,"genres":["スリラー","犯罪"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/5OKWdebuIQw6FS1TVHN2D7fhh3B.jpg","hook":"一晩中トラブルが悪化し続ける。ネオンの夜と電子音楽、焦燥そのものが衝撃の連続。","axes":{"shock":3,"unease":4,"beauty":3,"aftertaste":3.5,"gore":2,"quiet":1,"difficulty":1.5}},
+{"key":"enemy","tmdbId":181886,"title":"エネミー","titleOrig":"Enemy","year":2013,"director":"ドゥニ・ヴィルヌーヴ","runtime":91,"genres":["スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/kxHxeM9f3sTUO4dd437ZjddW0wf.jpg","hook":"自分と瓜二つの男。衝撃は最後の数秒に全部集中していて、『え？』で終わる。","axes":{"shock":4.5,"unease":4.5,"beauty":3.5,"aftertaste":5,"gore":1.5,"quiet":3.5,"difficulty":4.5}},
+{"key":"it-comes-at-night","tmdbId":418078,"title":"イット・カムズ・アット・ナイト","titleOrig":"It Comes at Night","year":2017,"director":"トレイ・エドワード・シュルツ","runtime":91,"genres":["ホラー","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/mGRZ0kYYxpXMU8Bv9NFduxLSOhk.jpg","hook":"何が起きたか最後まで断定しない。怪物ではなく、人間同士の疑いが行き着く先が怖い。","axes":{"shock":3,"unease":5,"beauty":3.5,"aftertaste":4.5,"gore":2.5,"quiet":4,"difficulty":3.5}},
+{"key":"the-whale","tmdbId":785084,"title":"ザ・ホエール","titleOrig":"The Whale","year":2022,"director":"ダーレン・アロノフスキー","runtime":117,"genres":["ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/raziaximLmyODyTxGE4BpvVB7Xi.jpg","hook":"アパートの一室、1人の身体と演技に全部賭ける。過食の長回しと、死にかけの緊張が続く。","axes":{"shock":3.5,"unease":3,"beauty":3,"aftertaste":4.5,"gore":2.5,"quiet":3.5,"difficulty":1.5}},
+{"key":"a-ghost-story","tmdbId":428449,"title":"A GHOST STORY／ア・ゴースト・ストーリー","titleOrig":"A Ghost Story","year":2017,"director":"デヴィッド・ロウリー","runtime":92,"genres":["ドラマ","ファンタジー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/hLrBdA8RkiR80GWaNCO9CQWgS1q.jpg","hook":"シーツの幽霊が、時間の流れをただ見つめる。衝撃の場面はないのにラストが全部効いてくる。","axes":{"shock":2,"unease":3,"beauty":5,"aftertaste":5,"gore":0,"quiet":5,"difficulty":3.5}},
+{"key":"first-reformed","tmdbId":458737,"title":"魂のゆくえ","titleOrig":"First Reformed","year":2017,"director":"ポール・シュレイダー","runtime":113,"genres":["ドラマ","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/wE6rYOAfW4vBVut57aSctBZ4iHD.jpg","hook":"牧師の信仰と絶望が静かに臨界へ向かう。抑制された画面の向こうの炎。","axes":{"shock":3.5,"unease":4,"beauty":4,"aftertaste":5,"gore":2,"quiet":5,"difficulty":3.5}},
+{"key":"ex-machina","tmdbId":264660,"title":"エクス・マキナ","titleOrig":"Ex Machina","year":2014,"director":"アレックス・ガーランド","runtime":108,"genres":["SF","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/vQ88OEeV11DEBRJx6Dj8zwaCwDN.jpg","hook":"閉じた邸宅でAIと対話する。整った近代建築の内側で、少しずつ立場が反転していく。","axes":{"shock":3.5,"unease":4,"beauty":4.5,"aftertaste":4,"gore":2.5,"quiet":3.5,"difficulty":2.5}},
+{"key":"the-lobster","tmdbId":254320,"title":"ロブスター","titleOrig":"The Lobster","year":2015,"director":"ヨルゴス・ランティモス","runtime":119,"genres":["ドラマ","SF"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/gsFAqzdCfdKoyn4xdHbisSNGipj.jpg","hook":"恋人を見つけられなければ動物にされる世界。棒読みの演技と不条理な規則の気持ち悪さ。","axes":{"shock":3,"unease":4,"beauty":3.5,"aftertaste":4,"gore":2.5,"quiet":3.5,"difficulty":3.5}},
+{"key":"swiss-army-man","tmdbId":347031,"title":"スイス・アーミー・マン","titleOrig":"Swiss Army Man","year":2016,"director":"ダニエルズ","runtime":97,"genres":["コメディ","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/pHEciKLOeUJPudb2NIICLPGZIWa.jpg","hook":"万能な死体と無人島を脱出する。下品な設定の下に、意外なくらい純粋な孤独がある。","axes":{"shock":2.5,"unease":2,"beauty":3.5,"aftertaste":4,"gore":1.5,"quiet":2,"difficulty":2.5}},
+{"key":"blue-velvet","tmdbId":793,"title":"ブルーベルベット","titleOrig":"Blue Velvet","year":1986,"director":"デヴィッド・リンチ","runtime":120,"genres":["スリラー","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/4Js6iIePIWWAScKixmXt7yW3PvU.jpg","hook":"整った郊外の芝生の下に虫が蠢く。『美しい表面の下に決定的におかしいもの』の原型。","axes":{"shock":4,"unease":4.5,"beauty":4.5,"aftertaste":5,"gore":3.5,"quiet":2.5,"difficulty":3}},
+{"key":"possession","tmdbId":21484,"title":"ポゼッション","titleOrig":"Possession","year":1981,"director":"アンジェイ・ズラウスキー","runtime":124,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/fF3vm3EIQ9TnpxZLlsvRB0GwsQH.jpg","hook":"地下鉄の通路でイザベル・アジャーニが身をよじり続ける長回し。演技の強度が理性を追い越す。","axes":{"shock":5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":4.5,"quiet":1.5,"difficulty":5}},
+{"key":"cure","tmdbId":36095,"title":"キュア","titleOrig":"CURE","year":1997,"director":"黒沢清","runtime":111,"genres":["ホラー","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/2KR0IDLxBIW3nQfS69o63BLeRWJ.jpg","hook":"喉に×印を刻む連続殺人。催眠の静けさと、水と風の音だけが残る日本産の不穏。","axes":{"shock":3.5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":3,"quiet":5,"difficulty":4}},
+{"key":"audition","tmdbId":11075,"title":"オーディション","titleOrig":"オーディション","year":1999,"director":"三池崇史","runtime":115,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/hkjpeUkXbsCjj0FrG1nNxVCxUid.jpg","hook":"前半の穏やかな恋愛劇が、ある電話の音から静かに反転する。『キリキリキリ』。","axes":{"shock":5,"unease":4.5,"beauty":3,"aftertaste":4.5,"gore":5,"quiet":3,"difficulty":2.5}},
+{"key":"perfect-blue","tmdbId":10494,"title":"パーフェクトブルー","titleOrig":"Perfect Blue","year":1997,"director":"今敏","runtime":81,"genres":["アニメ","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/79vujbsWEbX4dzffBV541QXN6sf.jpg","hook":"アイドルから女優へ転身する少女の現実が溶けていく。アニメでしかできない編集の悪夢。","axes":{"shock":4,"unease":4.5,"beauty":4,"aftertaste":4.5,"gore":3.5,"quiet":2,"difficulty":4}},
+{"key":"climax","tmdbId":507076,"title":"クライマックス","titleOrig":"Climax","year":2018,"director":"ギャスパー・ノエ","runtime":96,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/3yYb8iKnr1NAd1FGY5PyPjUxW4j.jpg","hook":"ダンサーたちの祝宴が一つの混入物で地獄に変わる。長回しのカメラが逃げ場を消していく。","axes":{"shock":4.5,"unease":4.5,"beauty":4.5,"aftertaste":4,"gore":3.5,"quiet":1,"difficulty":3}},
+{"key":"mother","tmdbId":381283,"title":"マザー！","titleOrig":"mother!","year":2017,"director":"ダーレン・アロノフスキー","runtime":121,"genres":["ホラー","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/2Uo8UDDq2d4BACzhKVl73TNUeCQ.jpg","hook":"招かれざる客が増え続け、家そのものが崩壊していく後半の加速。寓話の暴力。","axes":{"shock":4.5,"unease":4.5,"beauty":3.5,"aftertaste":4.5,"gore":4,"quiet":1.5,"difficulty":3.5}},
+{"key":"suspiria","tmdbId":11906,"title":"サスペリア","titleOrig":"Suspiria","year":1977,"director":"ダリオ・アルジェント","runtime":98,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/x55c8ABNRzG2f2OjBTNHMcjvtXb.jpg","hook":"原色の光とゴブリンの音楽。バレエ学校という整った場所の下にいる魔女たち。","axes":{"shock":4,"unease":4.5,"beauty":5,"aftertaste":4.5,"gore":4.5,"quiet":2.5,"difficulty":3}},
+{"key":"antichrist","tmdbId":17609,"title":"アンチクライスト","titleOrig":"Antichrist","year":2009,"director":"ラース・フォン・トリアー","runtime":108,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/eVO7fTYGQzFSWKgvCNbbMfnk2Gi.jpg","hook":"森の山小屋、喪失と狂気。美しいスローモーションと耐えがたい暴力が同居する。","axes":{"shock":5,"unease":5,"beauty":4.5,"aftertaste":4.5,"gore":5,"quiet":3.5,"difficulty":4.5}},
+{"key":"inland-empire","tmdbId":1730,"title":"インランド・エンパイア","titleOrig":"Inland Empire","year":2006,"director":"デヴィッド・リンチ","runtime":180,"genres":["ミステリー","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/fpo5azURhr4fVh4cB4kitabshdv.jpg","hook":"3時間、夢の論理だけで進む。説明を求めると負ける、感覚で沈むための映画。","axes":{"shock":3.5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":2.5,"quiet":3,"difficulty":5}},
+{"key":"kill-list","tmdbId":74725,"title":"キル・リスト","titleOrig":"Kill List","year":2011,"director":"ベン・ウィートリー","runtime":95,"genres":["ホラー","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/qwT2I3ons0oD58jIppKmd4qLtvB.jpg","hook":"ヒットマンの仕事映画として整って始まり、共同体の儀式へ滑り落ちる。ミッドサマーの「共同体が正気の顔で狂っている」の祖先。","axes":{"shock":4.5,"unease":4.5,"beauty":3,"aftertaste":4.5,"gore":4.5,"quiet":3,"difficulty":3.5}},
+{"key":"the-wailing","tmdbId":1413713,"title":"哭声／コクソン","titleOrig":"The Wailing","year":2016,"director":"ナ・ホンジン","runtime":156,"genres":["ホラー","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/nRrhrNWcPVgVR5qQdFy4fmLvyKZ.jpg","hook":"韓国の村、祈祷、悪魔。誰が正しいのか最後まで確定せず、家族を守る行為が呪いになる。余韻が最大級。","axes":{"shock":4.5,"unease":5,"beauty":4,"aftertaste":5,"gore":4,"quiet":3,"difficulty":4}},
+{"key":"relic","tmdbId":539181,"title":"レリック -遺物-","titleOrig":"Relic","year":2020,"director":"ナタリー・エリカ・ジェームズ","runtime":89,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/xGwN4Cjk6hUWWBwvHVBsKdQIrwi.jpg","hook":"認知症の母の家そのものが迷路化する。派手な衝撃でなく、家と家族が腐っていく静かな型。","axes":{"shock":3.5,"unease":4.5,"beauty":3.5,"aftertaste":4.5,"gore":2.5,"quiet":4.5,"difficulty":3}},
+{"key":"hagazussa","tmdbId":466565,"title":"ハガズサ","titleOrig":"Hagazussa","year":2017,"director":"ルーカス・ファイゲルフェルト","runtime":102,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/bGU0l4AJrBThDepVt34gEtnPbxj.jpg","hook":"15世紀の山小屋、母と娘。ウィッチの時代・宗教・孤立をさらに言葉少なくした版で、美しさと不潔さが同居する。","axes":{"shock":3.5,"unease":5,"beauty":4.5,"aftertaste":4.5,"gore":4,"quiet":5,"difficulty":4.5}},
+{"key":"november","tmdbId":437583,"title":"ノベンバー","titleOrig":"November","year":2017,"director":"ライネル・サルネット","runtime":115,"genres":["ファンタジー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/5gmQ6k4NWQQ0vlZ5KXtN3iLIPT9.jpg","hook":"エストニアの民話世界。白黒の映像美が際立ち、悪魔との取引が日常として描かれる。気高さの軸が強い。","axes":{"shock":3,"unease":4.5,"beauty":4,"aftertaste":4,"gore":3,"quiet":4.5,"difficulty":4.5}},
+{"key":"thelma","tmdbId":401898,"title":"テルマ","titleOrig":"Thelma","year":2017,"director":"ヨアキム・トリアー","runtime":116,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/l3ciaQdEBQdlOP2Bkc7BV7VkPdK.jpg","hook":"敬虔な家庭から大学へ出た少女の力が漏れ出す。整った北欧の表面と、その下の抑圧。","axes":{"shock":3.5,"unease":4,"beauty":4,"aftertaste":4,"gore":2,"quiet":4,"difficulty":3}},
+{"key":"border","tmdbId":517839,"title":"ボーダー 二つの世界","titleOrig":"Border","year":2018,"director":"アリ・アッバシ","runtime":110,"genres":["ファンタジー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/lY2cMPndCOcOyPFSeCpq9fN1CCa.jpg","hook":"匂いで嘘が分かる税関職員の女。自分の正体の判明が、世界の見え方を裏返す。「決定的に間違ったもの」が主人公自身の中にある型。","axes":{"shock":4,"unease":4,"beauty":4.5,"aftertaste":4,"gore":3,"quiet":4,"difficulty":3}},
+{"key":"his-house","tmdbId":575774,"title":"His House／選ばれた家","titleOrig":"His House","year":2020,"director":"レミ・ウィークス","runtime":93,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/s6XxJEe4ovVTMgmGmKeO87OFANU.jpg","hook":"亡命先の公営住宅に何かがいる。家のホラーと亡命者の罪悪感が重なる密室の一本。","axes":{"shock":4,"unease":4.5,"beauty":3,"aftertaste":4,"gore":3,"quiet":3.5,"difficulty":2.5}},
+{"key":"burning","tmdbId":813106,"title":"バーニング 劇場版","titleOrig":"Burning","year":2018,"director":"イ・チャンドン","runtime":148,"genres":["ミステリー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/hxGv1O2W5SOJTmiBc45CL842mrx.jpg","hook":"村上春樹原作。何も起きていないのに全部がおかしい。関心領域の「見えない地獄」を、犯罪の気配でやる一本。","axes":{"shock":3,"unease":5,"beauty":5,"aftertaste":5,"gore":1,"quiet":5,"difficulty":4.5}},
+{"key":"funny-games","tmdbId":10234,"title":"ファニーゲーム","titleOrig":"Funny Games","year":1997,"director":"ミヒャエル・ハネケ","runtime":109,"genres":["スリラー","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/rlbznhqKycQkWw9agSO5vadTHWJ.jpg","hook":"礼儀正しい青年2人が、整った別荘の日常を壊す。観客への巻き戻しの一手は今も衝撃の設計として別格。","axes":{"shock":5,"unease":5,"beauty":3.5,"aftertaste":5,"gore":4,"quiet":4,"difficulty":3.5}},
+{"key":"it-follows","tmdbId":270303,"title":"イット・フォローズ","titleOrig":"It Follows","year":2014,"director":"デヴィッド・ロバート・ミッチェル","runtime":100,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/oPl77Ih2CV2rJZdDUqWr2rYKpg3.jpg","hook":"美しいアメリカ郊外を「それ」が歩いて追ってくる。ブルーベルベットの郊外の芝生の下を、ホラーの規則1つでやった映画。","axes":{"shock":3.5,"unease":5,"beauty":4.5,"aftertaste":4,"gore":2,"quiet":4,"difficulty":3}},
+{"key":"safe","tmdbId":32646,"title":"セイフ","titleOrig":"Safe","year":1995,"director":"トッド・ヘインズ","runtime":119,"genres":["ドラマ","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/tBcan8HDI6Jt4SlDBZ1aM1189Gu.jpg","hook":"整った郊外住宅と優しい夫の下で、主婦の体だけが壊れていく。原因が最後まで確定しない、グロなしで不穏さ最大の証明。","axes":{"shock":3,"unease":5,"beauty":4.5,"aftertaste":5,"gore":0.5,"quiet":5,"difficulty":4}},
+{"key":"cache","tmdbId":445,"title":"隠された記憶","titleOrig":"Caché","year":2005,"director":"ミヒャエル・ハネケ","runtime":117,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/vSIGVNCLDnw1NYH8mgSrxC5jYQn.jpg","hook":"自宅を撮ったビデオテープが届く。犯人探しの形で、植民地の記憶と家庭の嘘が滲む。静けさと難解さの上限サンプル。","axes":{"shock":3.5,"unease":5,"beauty":4.5,"aftertaste":4.5,"gore":2,"quiet":5,"difficulty":4.5}},
+{"key":"the-invitation","tmdbId":306947,"title":"インヴィテーション","titleOrig":"The Invitation","year":2015,"director":"カリン・クサマ","runtime":100,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/l9Z79zPrib1t10ymodQeRIDFUSN.jpg","hook":"元妻の新居でのディナー会。親切な表面の下に何かある、という感覚だけで引っ張り、最後に絵で答える密室会話劇。","axes":{"shock":3.5,"unease":4.5,"beauty":3.5,"aftertaste":4,"gore":3,"quiet":3.5,"difficulty":2}},
+{"key":"annihilation","tmdbId":300668,"title":"アナイアレイション -全滅領域-","titleOrig":"Annihilation","year":2018,"director":"アレックス・ガーランド","runtime":115,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/x2yDlZJrKwSvrJzp5C1oOMyQy7N.jpg","hook":"光を屈折させる領域の中で、自然が美しく間違っていく。MEN／エクス・マキナのガーランドの「世界観で見る」一本。","axes":{"shock":4,"unease":4.5,"beauty":5,"aftertaste":4.5,"gore":4,"quiet":3.5,"difficulty":4}},
+{"key":"coherence","tmdbId":220289,"title":"コヒーレンス","titleOrig":"Coherence","year":2013,"director":"ジェームズ・ワード・バーキット","runtime":89,"genres":["SF","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/ezUtb9m5DeLwL2gxi4gktzNCvQv.jpg","hook":"彗星の夜のホームパーティで現実が分岐する。低予算・ほぼ一軒家で「日常の裏側」をやる最小構成。","axes":{"shock":4,"unease":4,"beauty":2.5,"aftertaste":3.5,"gore":0.5,"quiet":2.5,"difficulty":3.5}},
+{"key":"raw","tmdbId":393519,"title":"RAW -少女のめざめ-","titleOrig":"Raw","year":2016,"director":"ジュリア・デュクルノー","runtime":99,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/f2VwZTtOf3Sdg8Smnnb4fcTk0t6.jpg","hook":"ベジタリアンの獣医学生が肉に目覚める。美しい画面で、身体の欲望が一段ずつ外れていく。","axes":{"shock":4.5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":5,"quiet":2.5,"difficulty":2.5}},
+{"key":"bones-and-all","tmdbId":791177,"title":"ボーンズ アンド オール","titleOrig":"Bones and All","year":2022,"director":"ルカ・グァダニーノ","runtime":130,"genres":["ホラー","ロマンス"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/8IPyO90Hu0nbGaJAq6eeBz2fukN.jpg","hook":"人を食べる若者たちのロードムービーを、最も美しい恋愛映画の顔で撮る。「美しい表面の下に決定的に間違ったもの」の恋愛版。","axes":{"shock":3.5,"unease":4,"beauty":5,"aftertaste":5,"gore":4.5,"quiet":3.5,"difficulty":2.5}},
+{"key":"titane","tmdbId":630240,"title":"TITANE／チタン","titleOrig":"Titane","year":2021,"director":"ジュリア・デュクルノー","runtime":108,"genres":["ホラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/jImosD860cSduxTwfogZ3C7ajOI.jpg","hook":"頭にチタンプレート、車、殺人、偽装。身体変容の先をいく、荒さと品格が同居する一本。","axes":{"shock":5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":2,"difficulty":4}},
+{"key":"possessor","tmdbId":435615,"title":"ポゼッサー","titleOrig":"Possessor","year":2020,"director":"ブランドン・クローネンバーグ","runtime":103,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/gQQxVmTKxCH0u2xU68VDxipNRd3.jpg","hook":"他人の身体に乗り移って暗殺する女。ポゼッション(1981)と名前で対になる現代版。身体と人格の境界の崩れ。","axes":{"shock":4.5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":3,"difficulty":3.5}},
+{"key":"crimes-of-the-future","tmdbId":819876,"title":"クライムズ・オブ・ザ・フューチャー","titleOrig":"Crimes of the Future","year":2022,"director":"デヴィッド・クローネンバーグ","runtime":107,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/1lCklZ9Ad49TM264RCsR1ClWELS.jpg","hook":"内臓を育てて公開手術する芸術家の世界。静かで難解な方の身体ホラー。","axes":{"shock":3.5,"unease":4,"beauty":4.5,"aftertaste":4,"gore":4.5,"quiet":4.5,"difficulty":4.5}},
+{"key":"infinity-pool","tmdbId":667216,"title":"インフィニティ・プール","titleOrig":"Infinity Pool","year":2023,"director":"ブランドン・クローネンバーグ","runtime":117,"genres":["ホラー","SF"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/4KgsdUToiyAVzTVfJBfMm5iJLrQ.jpg","hook":"高級リゾートの整った楽園と、自分の複製が処刑される制度。ミッドサマーの「明るいリゾート共同体」の毒をSFで。","axes":{"shock":4.5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":2,"difficulty":2.5}},
+{"key":"goodnight-mommy","tmdbId":284303,"title":"グッドナイト・マミー","titleOrig":"Goodnight Mommy","year":2014,"director":"監督名未記載（調査ファイルに記載なし）","runtime":99,"genres":["ホラー","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/eMNYF8D3Qo8CNXwvZ52IsoCUk72.jpg","hook":"包帯で顔を覆った母親を、双子が「本物か」と疑う。整ったモダンな家と子どもの視線。顔が隠れていること自体が不穏さになる。オーストリア製作。","axes":{"shock":4.5,"unease":5,"beauty":4,"aftertaste":4,"gore":3,"quiet":4,"difficulty":3.5}},
+{"key":"color-out-of-space","tmdbId":548473,"title":"カラー・アウト・オブ・スペース","titleOrig":"Color Out of Space","year":2019,"director":"リチャード・スタンリー","runtime":111,"genres":["SF","ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/ocbtFL8Nt7XkMUxjooFC3BxGxfl.jpg","hook":"ラヴクラフト原作。隕石の色で農場と家族が変質する。色彩の美しさがそのまま汚染の表現になる型。","axes":{"shock":4,"unease":4,"beauty":4.5,"aftertaste":3.5,"gore":4,"quiet":2,"difficulty":3}},
+{"key":"dogtooth","tmdbId":38810,"title":"籠の中の乙女","titleOrig":"Dogtooth","year":2009,"director":"ヨルゴス・ランティモス","runtime":97,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/9VwqmjGv2J7wO5JlGqLQeexlSi3.jpg","hook":"ランティモスの原点。外界を知らずに育てられた子どもたちと、整った家庭の規則。聖なる鹿殺し／ロブスターへ連なる系譜の最初。","axes":{"shock":4,"unease":5,"beauty":3.5,"aftertaste":4.5,"gore":3,"quiet":4,"difficulty":3.5}},
+{"key":"kevin","tmdbId":71859,"title":"少年は残酷な弓を射る","titleOrig":"We Need to Talk About Kevin","year":2011,"director":"リン・ラムジー","runtime":112,"genres":["ドラマ","スリラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/wNzwSVhydTtMH0L5pR3Z9wC0ZaU.jpg","hook":"母と息子。事件そのものより、その前後の日常の赤が刺さる。家族の喪失と罪悪感の静かな版。","axes":{"shock":4,"unease":4.5,"beauty":4,"aftertaste":5,"gore":3,"quiet":3,"difficulty":3}},
+{"key":"the-skin-i-live-in","tmdbId":63311,"title":"私が、生きる肌","titleOrig":"The Skin I Live In","year":2011,"director":"ペドロ・アルモドバル","runtime":120,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/dAu4gPiwzMyXNrpghxgQLPYYKaI.jpg","hook":"整形外科医の整った邸宅と、監禁された女。美しい画面のまま、倫理だけが一段ずつ崩れる。反転の設計が見事。","axes":{"shock":4.5,"unease":4.5,"beauty":4.5,"aftertaste":4.5,"gore":3.5,"quiet":3.5,"difficulty":3}},
+{"key":"morvern-callar","tmdbId":18602,"title":"モーヴァン・カラー","titleOrig":"Morvern Callar","year":2002,"director":"リン・ラムジー","runtime":97,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/kKGUF97v8a62MtSKM0V6fqDxGTS.jpg","hook":"死体と一緒に旅することになった女の、静かな再生。衝撃でなく余韻と美しさの側の補充枠。","axes":{"shock":2.5,"unease":3.5,"beauty":4.5,"aftertaste":4.5,"gore":1.5,"quiet":5,"difficulty":3.5}},
+{"key":"pulse","tmdbId":27324,"title":"回路","titleOrig":"Pulse","year":2001,"director":"黒沢清","runtime":119,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/talt2heBA5jty9jfcMvuQcOEsEC.jpg","hook":"キュアの監督。ネットに繋いだ部屋から人が消える。赤いテープの部屋と、誰もいない東京。静けさと余韻の日本側の極。","axes":{"shock":3.5,"unease":5,"beauty":4,"aftertaste":5,"gore":1.5,"quiet":5,"difficulty":4}},
+{"key":"confessions","tmdbId":54186,"title":"告白","titleOrig":"Confessions","year":2010,"director":"中島哲也","runtime":106,"genres":["ドラマ","ミステリー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/p8vr7jVwflsSqAq91nWcOPZ2RIv.jpg","hook":"整った教室と美しいスローモーションで語られる復讐。表面の美しさと内容の冷たさの落差。","axes":{"shock":4,"unease":4,"beauty":5,"aftertaste":4.5,"gore":3,"quiet":2,"difficulty":2}},
+{"key":"cold-fish","tmdbId":68341,"title":"冷たい熱帯魚","titleOrig":"Cold Fish","year":2010,"director":"園子温","runtime":146,"genres":["スリラー","ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/8jzXKuuSMNYU0jSakJkdkzQcZbL.jpg","hook":"熱帯魚店の日常が、善意の顔をした男によって解体されていく。グロ上限のテストにもなる上限サンプル。","axes":{"shock":5,"unease":4.5,"beauty":2.5,"aftertaste":4,"gore":5,"quiet":1.5,"difficulty":2}},
+{"key":"helter-skelter","tmdbId":104524,"title":"ヘルタースケルター","titleOrig":"Helter Skelter","year":2012,"director":"蜷川実花","runtime":127,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/rctha2z3lZ5YTCo4IE3cUJT4q2D.jpg","hook":"全身整形のモデルの美しい表面と、その下の崩壊。美しさの軸が突出した、絵画的な色彩の異色枠。","axes":{"shock":3.5,"unease":3.5,"beauty":5,"aftertaste":3.5,"gore":3.5,"quiet":1.5,"difficulty":2}},
+{"key":"memoria","tmdbId":511819,"title":"メモリア","titleOrig":"Memoria","year":2021,"director":"アピチャッポン・ウィーラセタクン","runtime":136,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/vg0A9jSPdXsXnsjQ5jt3BFzdW67.jpg","hook":"自分にだけ聞こえる爆発音を辿る旅。静けさ・難解さ・余韻が全部上限。aftersunの「衝撃なしで残る」方向の到達点。","axes":{"shock":2,"unease":4.5,"beauty":5,"aftertaste":5,"gore":0,"quiet":5,"difficulty":5}},
+{"key":"skinamarink","tmdbId":994143,"title":"スキナマリンク","titleOrig":"Skinamarink","year":2022,"director":"カイル・エドワード・ボール","runtime":100,"genres":["ホラー"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/h9CgK5iMb6hZE5eIQ3jLrtKPXUv.jpg","hook":"真夜中の家、子どもだけ、画面はほぼ暗闇と天井。観客の側が怖さを組み立てる低予算の実験作。難解さ上限のもう1本。","axes":{"shock":4,"unease":5,"beauty":3,"aftertaste":4.5,"gore":1,"quiet":5,"difficulty":5}},
+{"key":"nitram","tmdbId":797457,"title":"ニトラム","titleOrig":"Nitram","year":2021,"director":"ジャスティン・カーゼル","runtime":112,"genres":["ドラマ"],"a24":false,"poster":"https://image.tmdb.org/t/p/w342/travctNsTHtPYsjggA13WpHQq2x.jpg","hook":"実在の事件の犯人の日常を、事件をほぼ描かずに積む。整った郊外と家族の無力さ。余韻の重さで選ぶ枠。","axes":{"shock":3.5,"unease":4.5,"beauty":3.5,"aftertaste":5,"gore":2.5,"quiet":4,"difficulty":2.5}},
+{"key":"hereditary","tmdbId":493922,"title":"ヘレディタリー／継承","titleOrig":"Hereditary","year":2018,"director":"アリ・アスター","runtime":127,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/t0Lr3xOB88ifQgsVFC9iadmYVc2.jpg","hook":"家族の喪失がそのまま呪いになる。あの首の場面と、音の使い方が忘れられない。","axes":{"shock":4.5,"unease":5,"beauty":4,"aftertaste":4.5,"gore":4,"quiet":3,"difficulty":3}},
+{"key":"midsommar","tmdbId":530385,"title":"ミッドサマー","titleOrig":"Midsommar","year":2019,"director":"アリ・アスター","runtime":148,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/8fpyy5NC1busoN4WV8dBl3eBf8q.jpg","hook":"白夜の花畑という最も明るい表面の下の崖。美しさと残酷さが同じ光で撮られている。","axes":{"shock":4.5,"unease":4.5,"beauty":5,"aftertaste":4.5,"gore":4.5,"quiet":2.5,"difficulty":3}},
+{"key":"the-lighthouse","tmdbId":503919,"title":"ライトハウス","titleOrig":"The Lighthouse","year":2019,"director":"ロバート・エガース","runtime":109,"genres":["ホラー","スリラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/lTPSbEEA2J0VwAXJaDypb0003cF.jpg","hook":"孤島の灯台、2人の男、白黒の画面。狂気が潮騒と一緒に満ちてくる。","axes":{"shock":3.5,"unease":4.5,"beauty":4.5,"aftertaste":4.5,"gore":3,"quiet":3,"difficulty":4.5}},
+{"key":"x-movie","tmdbId":760104,"title":"X エックス","titleOrig":"X","year":2022,"director":"タイ・ウェスト","runtime":105,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/9zBOO8JUKescHhmfPdMAwYwE84o.jpg","hook":"70年代スラッシャーへの愛と、老いへの視線。殺し方の勢いが直球。","axes":{"shock":4,"unease":3.5,"beauty":3.5,"aftertaste":3,"gore":5,"quiet":2,"difficulty":1.5}},
+{"key":"pearl","tmdbId":949423,"title":"Pearl パール","titleOrig":"Pearl","year":2022,"director":"タイ・ウェスト","runtime":102,"genres":["ホラー","ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/h7xwpgVCxdImnUYmYMQPK6fbl6H.jpg","hook":"テクニカラーの牧場で笑顔が崩れていく。長回しの独白がこの映画の心臓。","axes":{"shock":4,"unease":4,"beauty":4.5,"aftertaste":4,"gore":4,"quiet":2.5,"difficulty":2}},
+{"key":"aftersun","tmdbId":965150,"title":"aftersun／アフターサン","titleOrig":"Aftersun","year":2022,"director":"シャーロット・ウェルズ","runtime":102,"genres":["ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/juooGArBKAJcxnAqslZGpUj7pWH.jpg","hook":"父と娘の休暇のビデオ映像。衝撃の場面はないのに、ラストのダンスで全部が効いてくる。","axes":{"shock":1.5,"unease":2.5,"beauty":5,"aftertaste":5,"gore":0,"quiet":5,"difficulty":3}},
+{"key":"zone-of-interest","tmdbId":467244,"title":"関心領域","titleOrig":"The Zone of Interest","year":2023,"director":"ジョナサン・グレイザー","runtime":105,"genres":["ドラマ"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/m62six4iJgG9hb0XX0OPT0nf7HX.jpg","hook":"塀の向こうの音だけが地獄を伝える。整った家庭の日常と、聞こえ続ける何か。","axes":{"shock":3,"unease":5,"beauty":4,"aftertaste":5,"gore":0.5,"quiet":4.5,"difficulty":3.5}},
+{"key":"tuesday","tmdbId":831395,"title":"終わりの鳥","titleOrig":"Tuesday","year":2023,"director":"ダイナ・O・プシッチ","runtime":110,"genres":["ドラマ","ファンタジー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/zrd6blans3SqghHSxPAl7tqnaOf.jpg","hook":"死が鳥の姿でやってくる。奇妙な設定を、母と娘の別れの物語として正面から撮る。","axes":{"shock":3,"unease":3,"beauty":3.5,"aftertaste":4.5,"gore":1.5,"quiet":3.5,"difficulty":3}},
+{"key":"love-lies-bleeding","tmdbId":948549,"title":"愛はステロイド","titleOrig":"Love Lies Bleeding","year":2024,"director":"ローズ・グラス","runtime":104,"genres":["スリラー","ロマンス"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/1bxOOchvNo5SDFTwZ2JljpdOGu9.jpg","hook":"筋肉と犯罪と恋。身体そのものが暴力的になっていくネオンのスリラー。","axes":{"shock":4,"unease":3.5,"beauty":3.5,"aftertaste":3.5,"gore":4,"quiet":1.5,"difficulty":2}},
+{"key":"men","tmdbId":780609,"title":"MEN 同じ顔の男たち","titleOrig":"Men","year":2022,"director":"アレックス・ガーランド","runtime":100,"genres":["ホラー"],"a24":true,"poster":"https://image.tmdb.org/t/p/w342/ilqxptpFOU85qWiSTkB491fZybr.jpg","hook":"村の男たちが全員同じ顔。ラスト20分、男が男を産む連鎖で見ていたものが崩れる。","axes":{"shock":5,"unease":4.5,"beauty":4,"aftertaste":4,"gore":4.5,"quiet":3,"difficulty":4}}
 ];
 const CATALOG_BY_KEY = {};
 CATALOG.forEach(f=>{ CATALOG_BY_KEY[f.key]=f; });
 
 /* ================= data store ================= */
 const LS_DATA='movieStandalone.data.v1';
-const LS_TOKEN_EXP='movieStandalone.tokenExpiry';
-const LS_AUTH_ERR='movieStandalone.authError';
-const LS_PENDING='movieStandalone.pendingConnect';
-const SS_TOKEN='movieStandalone.accessToken';
 const LS_TMDB='tmdb-read-token';
 const DATA_VERSION=1;
 /* Blank defaults only. Personal data (watched films, ratings, criteria) is
@@ -524,6 +523,8 @@ function posterTap(el){
   const title=el.getAttribute('data-title')||'';
   if(!url) return;
   openLightbox(url, title, el.getAttribute('data-meta')||'');
+  const tid=el.getAttribute('data-tmdb');
+  fillLbProv(tid ? parseInt(tid,10) : null);
 }
 function enlargeUrl(url){ return url ? url.replace('/t/p/w342/','/t/p/w780/').replace('/t/p/w185/','/t/p/w780/') : url; }
 function openLightbox(url, title, meta){
@@ -542,12 +543,13 @@ function openLightbox(url, title, meta){
   }
   $('lbtitle').textContent=title||'';
   $('lbmeta').textContent=meta||'';
+  const lp=$('lbprov'); if(lp) lp.textContent='';
   lb.classList.add('open');
 }
 function closeLightbox(){ const lb=$('lightbox'); if(lb) lb.classList.remove('open'); }
-function posterWithMeta(posterUrl, title, meta, width){
+function posterWithMeta(posterUrl, title, meta, width, tmdbId){
   const html=posterHTML(posterUrl, title, width);
-  return html.replace('onclick="posterTap(this)"', 'data-meta="'+escA(meta||'')+'" onclick="posterTap(this)"');
+  return html.replace('onclick="posterTap(this)"', 'data-meta="'+escA(meta||'')+'"'+(tmdbId?' data-tmdb="'+tmdbId+'"':'')+' onclick="posterTap(this)"');
 }
 function metaLine(f){
   const parts=[];
@@ -590,11 +592,12 @@ function recCardHTML(pick, isTop, rank){
   let h='<div class="card">';
   if(isTop) h+='<span class="topbadge">今夜のおすすめ</span>';
   else h+='<div class="ranknum">'+rank+'位</div>';
-  h+='<div class="recrow">'+posterWithMeta(f.poster, f.title, metaLine(f), isTop?96:76);
+  h+='<div class="recrow">'+posterWithMeta(f.poster, f.title, metaLine(f), isTop?96:76, f.tmdbId);
   h+='<div class="recmain"><div style="display:flex;gap:10px;align-items:flex-start"><div style="flex:1;min-width:0">'+
     '<div class="ftitle">'+esc(f.title)+'</div><div class="forig">'+esc(f.titleOrig||'')+'</div>'+
     '<div class="fmeta">'+esc(metaLine(f))+(f.genres&&f.genres.length?'／'+esc(f.genres.join('・')):'')+'</div></div>'+
     '<div class="scorebox"><div class="num">'+pick.score+'</div><div class="lbl">マッチ度</div></div></div>';
+  h+=provLineHTML(f.tmdbId, null);
   h+='<div class="hook">'+esc(f.hook||'')+'</div>';
   h+='<div style="margin-top:8px">'+pick.reasons.map(r=>'<span class="reasonchip">'+esc(r)+'</span>').join('')+'</div>';
   h+=axisBarsHTML(pick.axisDetail);
@@ -624,6 +627,7 @@ function renderRec(){
     }
   }
   wrap.innerHTML=h;
+  scanProviders();
 }
 
 /* ================= view: 判定基準 ================= */
@@ -699,7 +703,7 @@ function tmdbRowHTML(m, i){
   const title=m.title||m.original_title||'';
   const year=m.release_date ? m.release_date.slice(0,4) : '';
   const already=DB.films.some(f=>f.tmdbId===m.id);
-  let h='<div class="card"><div class="tmdbrow">'+posterWithMeta(poster, title, (year?year+'年／':'')+(m.original_title||''), 56);
+  let h='<div class="card"><div class="tmdbrow">'+posterWithMeta(poster, title, (year?year+'年／':'')+(m.original_title||''), 56, m.id);
   h+='<div class="libmain"><div class="ftitle" style="font-size:15px">'+esc(title)+(already?'<span class="statusbadge">登録済み</span>':'')+'</div>'+
     '<div class="forig">'+esc(m.original_title||'')+'</div><div class="fmeta">'+esc(year?year+'年':'')+'</div>';
   if(!already){
@@ -802,12 +806,137 @@ async function registerTmdb(i){
   alert('登録しました。ライブラリで確認できます。');
 }
 
+/* ================= watch providers (TMDb / JustWatch, region JP) =================
+   Availability data comes only from TMDb's /watch/providers response
+   (JustWatch-sourced). Nothing is hand-written per film. Results are
+   cached per film in localStorage and stay fresh for 12 hours. */
+const LS_PROVIDERS='movie.providers.v1';
+const PROVIDER_TTL=12*60*60*1000;
+let provCache=null;
+const provInflight={};
+function provLoad(){
+  if(provCache) return provCache;
+  try{ provCache=JSON.parse(storeGet(LS_PROVIDERS)||'{}'); if(!provCache || typeof provCache!=='object') provCache={}; }
+  catch(e){ provCache={}; }
+  return provCache;
+}
+function provSave(){ try{ storeSet(LS_PROVIDERS, JSON.stringify(provCache)); }catch(e){} }
+function provBaseNames(list){
+  /* API display order, deduped by base name; an ads-only variant is
+     shown as 「（広告付き）」, a plain variant wins over the ads one. */
+  const order=[], plain={}, ads={};
+  for(const p of (list||[])){
+    let n=(p && p.provider_name) || '';
+    if(!n) continue;
+    let isAds=false;
+    if(/ with Ads$/i.test(n)){ isAds=true; n=n.replace(/ with Ads$/i,''); }
+    if(order.indexOf(n)<0) order.push(n);
+    if(isAds){ if(!plain[n]) ads[n]=true; } else { plain[n]=true; delete ads[n]; }
+  }
+  return order.map(n=> ads[n] ? n+'（広告付き）' : n);
+}
+async function fetchProviders(tmdbId){
+  const c=provLoad();
+  const ent=c['p'+tmdbId];
+  if(ent && (Date.now()-ent.at)<PROVIDER_TTL) return ent;
+  if(!getTmdbToken()) return null;
+  if(provInflight[tmdbId]) return provInflight[tmdbId];
+  const pr=(async()=>{
+    try{
+      const j=await tmdbFetch('/movie/'+tmdbId+'/watch/providers');
+      const jp=(j && j.results && j.results.JP) || null;
+      const e={ at:Date.now(), hasJP:!!jp,
+        flatrate: jp ? provBaseNames(jp.flatrate) : [],
+        rent: jp ? provBaseNames(jp.rent) : [],
+        buy: jp ? provBaseNames(jp.buy) : [] };
+      c['p'+tmdbId]=e; provSave();
+      return e;
+    }catch(err){ return null; }
+  })();
+  provInflight[tmdbId]=pr;
+  pr.then(()=>{ delete provInflight[tmdbId]; });
+  return pr;
+}
+function provLineText(e){
+  if(e.flatrate && e.flatrate.length) return '配信：'+e.flatrate.join('／');
+  if((e.rent && e.rent.length) || (e.buy && e.buy.length)) return 'サブスクなし（レンタルあり）';
+  return '配信なし（日本）';
+}
+function provDetailText(e){
+  const lines=[];
+  if(e.flatrate && e.flatrate.length) lines.push('サブスク：'+e.flatrate.join('／'));
+  if(e.rent && e.rent.length) lines.push('レンタル：'+e.rent.join('／'));
+  if(e.buy && e.buy.length) lines.push('購入：'+e.buy.join('／'));
+  if(!lines.length) lines.push('日本での配信・レンタル・購入情報なし');
+  const d=new Date(e.at);
+  lines.push('日本・TMDb（JustWatch）調べ／'+(d.getMonth()+1)+'/'+d.getDate()+'取得');
+  return lines.join('\n');
+}
+async function fillLbProv(tmdbId){
+  const lp=$('lbprov'); if(!lp) return;
+  if(!tmdbId || !getTmdbToken()){ lp.textContent=''; return; }
+  const e=await fetchProviders(tmdbId);
+  const lb=$('lightbox');
+  if(!lb || !lb.classList.contains('open')) return;
+  lp.textContent = e ? provDetailText(e) : '';
+}
+async function resolveProvId(title, origTitle, year){
+  /* free-text films: one title(+year) search resolve, cached either way */
+  const c=provLoad();
+  const ck='r'+(title||'')+'|'+(year||'');
+  if(ck in c) return c[ck] || null;
+  let found=null;
+  const queries=[title];
+  if(origTitle && origTitle!==title) queries.push(origTitle);
+  for(const q of queries){
+    if(!q) continue;
+    try{
+      const j=await tmdbFetch('/search/movie?language=ja-JP&include_adult=false&query='+encodeURIComponent(q));
+      const rs=j.results||[];
+      const hit = year ? rs.find(m=>m.release_date && parseInt(m.release_date.slice(0,4),10)===year) : rs[0];
+      if(hit){ found=hit.id; break; }
+    }catch(e){ /* stays unresolved */ }
+  }
+  c[ck]=found||0; provSave();
+  return found;
+}
+function scanProviders(){
+  if(!getTmdbToken()) return;
+  document.querySelectorAll('.provline[data-tmdb]:not([data-done])').forEach(el=>{
+    el.setAttribute('data-done','1');
+    const id=parseInt(el.getAttribute('data-tmdb'),10);
+    if(!id) return;
+    fetchProviders(id).then(e=>{ if(e) el.textContent=provLineText(e); });
+  });
+  document.querySelectorAll('.provline[data-resolve]:not([data-done])').forEach(el=>{
+    el.setAttribute('data-done','1');
+    const yr=parseInt(el.getAttribute('data-ryear')||'',10);
+    resolveProvId(el.getAttribute('data-rtitle')||'', el.getAttribute('data-rorig')||'', isNaN(yr)?null:yr).then(id=>{
+      if(!id) return;
+      fetchProviders(id).then(e=>{ if(e) el.textContent=provLineText(e); });
+    });
+  });
+}
+function tmdbIdForFilm(f){
+  if(f && typeof f.tmdbId==='number') return f.tmdbId;
+  if(f && f.catalogKey && CATALOG_BY_KEY[f.catalogKey]) return CATALOG_BY_KEY[f.catalogKey].tmdbId || null;
+  return null;
+}
+function provLineHTML(tmdbId, film){
+  if(!getTmdbToken()) return '';
+  if(tmdbId) return '<div class="provline" data-tmdb="'+tmdbId+'"></div>';
+  if(film && film.title) return '<div class="provline" data-resolve="1" data-rtitle="'+escA(film.title)+'" data-rorig="'+escA(film.titleOrig||'')+'" data-ryear="'+(film.year||'')+'"></div>';
+  return '';
+}
+
 /* ================= view: ライブラリ ================= */
 function libRowHTML(f){
   const poster=posterFor(f);
-  let h='<div class="card"><div class="librow">'+posterWithMeta(poster, f.title, metaLine(f), 56)+
+  const ptid=tmdbIdForFilm(f);
+  let h='<div class="card"><div class="librow">'+posterWithMeta(poster, f.title, metaLine(f), 56, ptid)+
     '<div class="libmain"><div class="ftitle" style="font-size:15px">'+esc(f.title)+'</div>'+
     '<div class="forig">'+esc(f.titleOrig||'')+'</div><div class="fmeta">'+esc(metaLine(f))+'</div>'+
+    provLineHTML(ptid, f)+
     '<div class="fieldrow"><label>評価 <select class="selin" onchange="onLibRating(\''+f.id+'\', this.value)">'+ratingOptions(f.rating)+'</select></label>'+
     '<label>鑑賞日 <input type="date" value="'+escA(f.watchedDate||'')+'" onchange="onLibDate(\''+f.id+'\', this.value)"></label></div>'+
     '<div class="fieldrow"><input type="text" class="memo" placeholder="メモ" value="'+escA(f.memo||'')+'" onchange="onLibMemo(\''+f.id+'\', this.value)"></div>'+
@@ -829,6 +958,7 @@ function renderLibrary(){
   h+='<div class="secttl">観たい映画（'+want.length+'）</div>';
   h+= want.length ? want.map(libRowHTML).join('') : '<div class="empty">まだありません</div>';
   wrap.innerHTML=h;
+  scanProviders();
 }
 function onLibRating(id, v){ const f=filmById(id); if(!f) return; f.rating=v?parseFloat(v):null; touch(); }
 function onLibDate(id, v){ const f=filmById(id); if(!f) return; f.watchedDate=v||null; touch(); }
@@ -848,7 +978,7 @@ const SICON = {
   info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.7"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.9" r="1.2" fill="currentColor" stroke="none"/></svg>'
 };
 let settingsPanel=null;
-function driveVal(){ return syncStatus==='synced' ? '同期済み' : (syncStatus==='syncing' ? '同期中…' : (syncStatus==='error' ? '同期エラー' : (relayReady() ? '中継で接続済み' : '未接続'))); }
+function driveVal(){ return syncStatus==='synced' ? '同期済み' : (syncStatus==='syncing' ? '同期中…' : (syncStatus==='error' ? '同期エラー' : (relayReady() ? '中継で接続済み' : '未設定'))); }
 function srow(icon, label, val, onclick){
   return '<button class="srow" onclick="'+onclick+'"><span class="ic">'+icon+'</span><span class="lb">'+esc(label)+'</span>'+(val?'<span class="val">'+esc(val)+'</span>':'')+'<span class="chev">›</span></button>';
 }
@@ -885,18 +1015,18 @@ function renderSettingsPanel(){
     const rc=relayCfg();
     p.innerHTML = panelShell('Google Drive 同期',
       '<div class="setbox">'+
-      '<span class="syncpill" id="syncpill">未接続</span>'+
-      '<div class="btnrow"><button class="btn primary" onclick="connectDrive()">Google Driveと接続</button><button class="btn" onclick="syncNow(\'manual\')">今すぐ同期</button><button class="btn" onclick="disconnectDrive()">切断</button></div>'+
+      '<span class="syncpill" id="syncpill">未設定</span>'+
+      '<div class="btnrow"><button class="btn" onclick="syncNow(\'manual\')">今すぐ同期</button></div>'+
       '<div class="syncstat" id="syncstat"></div>'+
-      '<div class="note">同期先は Drive 上の「movie.json」（このアプリが作成したファイルのみ読み書きします）。未接続でも端末内で全機能が使えます。</div>'+
+      '<div class="note">同期先は Drive 上の「movie.json」。下の中継（Apps Script）経由でのみ読み書きします。未設定でも端末内で全機能が使えます。</div>'+
       '</div>'+
       '<div class="setbox" style="margin-top:12px">'+
       '<div class="setlabel">中継（Apps Script）</div>'+
       '<input class="textin" id="relay-url-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="中継の URL（https://script.google.com/macros/s/…）" value="'+(rc ? escA(rc.url) : RELAY_URL_DEFAULT)+'">'+
       '<input class="textin" id="relay-secret-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="シークレット" value="'+(rc ? escA(rc.secret) : '')+'" style="margin-top:8px">'+
       '<div class="btnrow"><button class="btn primary" onclick="relaySaveAndTest()">保存して接続テスト</button>'+(rc ? '<button class="btn" onclick="relayClear()">中継を解除</button>' : '')+'</div>'+
-      '<div class="syncstat" id="relaystat">'+(rc ? '設定済みです。接続テストで中継の応答を確認できます。' : '未設定です。')+'</div>'+
-      '<div class="note">あなたの Google アカウントの中で動く中継経由で同期します。設定すると Google ログインが不要になり、アプリを落としても接続が切れません。URL とシークレットはこの端末内にだけ保存されます。</div>'+
+      '<div class="syncstat" id="relaystat">'+(rc ? '設定済みです。接続テストで中継の応答を確認できます。' : '未設定です。シークレットを貼って「保存して接続テスト」を押してください。')+'</div>'+
+      '<div class="note">あなたの Google アカウントの中で動く中継経由で同期します。ログインは不要で、アプリを落としても接続が切れません。URL とシークレットはこの端末内にだけ保存されます。</div>'+
       '</div>');
     renderSyncStatus();
   }
@@ -906,7 +1036,8 @@ function renderSettingsPanel(){
       '<div class="setbox"><div class="setlabel">API Read Access Token</div>'+
       '<input class="textin" id="tmdb-token-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="トークンを貼り付け" value="'+escA(tok)+'">'+
       '<div class="btnrow"><button class="btn primary" onclick="saveTmdbToken()">保存</button><button class="btn" onclick="clearTmdbToken()">消去</button></div>'+
-      '<div class="note">トークンはこの端末内にだけ保存され、Driveには同期されません。</div></div>');
+      (tok ? '' : '<div class="note">配信情報の表示にはTMDbトークンが必要です</div>')+
+      '<div class="note">トークンはこの端末内にだけ保存され、Driveには同期されません。映画検索と、各映画の配信情報（どのサブスクで観られるか）の取得に使います。</div></div>');
   }
   else if(settingsPanel==='data'){
     p.innerHTML = panelShell('データ',
@@ -1012,36 +1143,20 @@ window.addEventListener('resize', ()=>{ moveNavInd(false); pinNav(); });
 window.addEventListener('scroll', ()=>{ if(navHealTimer) clearTimeout(navHealTimer); navHealTimer=setTimeout(healNav, 160); }, { passive:true });
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) setTimeout(healNav, 60); });
 
-/* ================= Google Drive sync ================= */
-const DRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
-const DRIVE_API='https://www.googleapis.com/drive/v3';
-const UPLOAD_API='https://www.googleapis.com/upload/drive/v3';
+/* ================= Drive sync (中継 / Apps Script only) =================
+   Since v1.11 the relay is the sole transport; the old GIS (Google
+   login) route was removed. The relay, deployed under the user's own
+   Google account, reads and writes movie.json on Drive (server-side
+   name allowlist + shared secret), so sync needs no login at all and
+   the connection can never lapse. URL + secret live only in this
+   device's localStorage. In relay mode a file's "id" is its name. */
 const DRIVE_FILE_NAME='movie.json';
-const DEFAULT_CLIENT_ID='386087008053-de53ufnkvcnbjslkuhmq2l2pm9fj4c2t.apps.googleusercontent.com';
 let syncStatus='disconnected'; /* disconnected | syncing | synced | error */
 let syncMsg='';
 let lastSyncAt=0;
 let syncTimer=null;
 let syncRunning=false;
 
-function getClientId(){ return DEFAULT_CLIENT_ID; }
-function getValidToken(){
-  const tok=storeGet(SS_TOKEN);
-  const exp=+(storeGet(LS_TOKEN_EXP)||0);
-  if(tok && exp && Date.now()<exp-15000) return tok;
-  return null;
-}
-function isDriveConnected(){ return !!getValidToken(); }
-function storeToken(tok, expiresInSec){
-  storeSet(SS_TOKEN, tok);
-  storeSet(LS_TOKEN_EXP, String(Date.now() + (expiresInSec||3600)*1000));
-  storeDel(LS_AUTH_ERR);
-}
-function clearToken(){
-  storeDel(SS_TOKEN);
-  storeDel(LS_TOKEN_EXP);
-  storeDel(LS_AUTH_ERR);
-}
 function setSyncStatus(st, msg){
   syncStatus=st; if(typeof msg==='string') syncMsg=msg;
   renderSyncStatus();
@@ -1052,129 +1167,37 @@ function renderSyncStatus(){
   else if(syncStatus==='syncing') label='同期中…';
   else if(syncStatus==='error'){ label='同期エラー'+(syncMsg ? '：'+syncMsg : ''); cls='err'; }
   else if(relayReady()) label='中継で接続済み（未同期）';
-  else label='Drive未接続（端末内に保存中）';
+  else label='中継未設定（端末内に保存中）';
   const dot=$('syncdot');
-  if(dot) dot.style.background = ((relayReady() || isDriveConnected()) && syncStatus!=='error') ? '#46a758' : '#e5484d';
+  if(dot) dot.style.background = (relayReady() && syncStatus!=='error') ? '#46a758' : '#e5484d';
   const bar=$('syncbar');
   if(bar){
     let hint='';
     if(syncStatus==='syncing') hint='';
     else if(syncStatus==='error') hint=' ・ <span class="sbhint">タップで再試行</span>';
-    else if(relayReady() || isDriveConnected()) hint=' ・ <span class="sbhint">タップで再同期</span>';
-    else hint=' ・ <span class="sbhint">タップで接続</span>';
+    else if(relayReady()) hint=' ・ <span class="sbhint">タップで再同期</span>';
+    else hint=' ・ <span class="sbhint">タップで設定</span>';
     bar.innerHTML='<span class="'+cls+'">'+esc(label)+'</span>'+hint;
   }
   const st=$('syncstat'); if(st) st.innerHTML='<span class="'+cls+'">'+esc(label)+'</span>';
   const pill=$('syncpill');
   if(pill){
-    pill.textContent = syncStatus==='synced' ? '同期済み' : (syncStatus==='syncing' ? '同期中…' : (syncStatus==='error' ? '同期エラー' : (relayReady() ? '中継で接続済み' : '未接続')));
+    pill.textContent = syncStatus==='synced' ? '同期済み' : (syncStatus==='syncing' ? '同期中…' : (syncStatus==='error' ? '同期エラー' : (relayReady() ? '中継で接続済み' : '未設定')));
     pill.className='syncpill'+(syncStatus==='synced'?' ok':(syncStatus==='error'?' err':''));
   }
 }
 function onSyncBarTap(){
   if(syncStatus==='syncing' || syncRunning) return;
-  if(relayReady() || isDriveConnected()){ syncNow('manual'); return; }
-  connectDrive();
+  if(relayReady()){ syncNow('manual'); return; }
+  /* not configured: take the user to the relay settings */
+  showView('settings');
+  openSettingsPanel('drive');
 }
 function scheduleSync(){
-  if(!isDriveConnected() && !relayReady()) return;
+  if(!relayReady()) return;
   if(syncTimer) clearTimeout(syncTimer);
   syncTimer=setTimeout(()=>{ syncNow('auto'); }, 1500);
 }
-function connectDrive(){
-  const cid=getClientId();
-  if(!(window.google && google.accounts && google.accounts.oauth2)){
-    alert('Googleのライブラリを読み込めませんでした。通信環境を確認して、もう一度お試しください。'); return;
-  }
-  try{
-    const tc=google.accounts.oauth2.initTokenClient({
-      client_id: cid,
-      scope: DRIVE_SCOPE,
-      ux_mode: 'popup',
-      callback: function(resp){
-        if(resp && resp.access_token){
-          storeToken(resp.access_token, parseInt(resp.expires_in||'3600',10));
-          storeDel(LS_PENDING);
-          setSyncStatus('syncing');
-          syncNow('connect');
-        } else {
-          setSyncStatus('error', 'トークンを取得できませんでした');
-        }
-      },
-      error_callback: function(err){
-        const t='認証エラー：'+((err && (err.type || err.message)) || 'unknown');
-        storeSet(LS_AUTH_ERR, t);
-        setSyncStatus('error', t);
-        storeDel(LS_PENDING);
-      }
-    });
-    storeSet(LS_PENDING, String(Date.now()));
-    tc.requestAccessToken();
-  }catch(e){
-    alert('接続を開始できませんでした：'+(e && e.message ? e.message : e));
-  }
-}
-function disconnectDrive(){
-  const tok=getValidToken();
-  if(tok && window.google && google.accounts && google.accounts.oauth2){
-    try{ google.accounts.oauth2.revoke(tok, function(){}); }catch(e){}
-  }
-  clearToken(); setSyncStatus('disconnected');
-}
-function checkAuthRedirect(){
-  let handled=null;
-  const hadPending=!!storeGet(LS_PENDING);
-  if(location.hash && location.hash.indexOf('access_token')>=0){
-    const p=new URLSearchParams(location.hash.slice(1));
-    const tok=p.get('access_token');
-    const exp=parseInt(p.get('expires_in')||'3600', 10);
-    if(tok){ storeToken(tok, exp); storeDel(LS_PENDING); handled='token'; }
-    try{ history.replaceState(null, '', location.pathname+location.search); }catch(e){}
-  } else if(location.hash && location.hash.indexOf('error')>=0){
-    const p=new URLSearchParams(location.hash.slice(1));
-    const errTxt='認証エラー：'+(p.get('error')||'unknown')+((p.get('error_description')) ? '（'+p.get('error_description')+'）' : '');
-    storeSet(LS_AUTH_ERR, errTxt);
-    setSyncStatus('error', errTxt);
-    storeDel(LS_PENDING);
-    handled='error';
-    try{ history.replaceState(null, '', location.pathname+location.search); }catch(e){}
-  }
-  if(!handled && hadPending && !isDriveConnected()){
-    const diagTxt='診断：接続ボタンは押されましたが、認証の戻りが確認できませんでした';
-    storeSet(LS_AUTH_ERR, diagTxt);
-    setSyncStatus('error', diagTxt);
-    storeDel(LS_PENDING);
-    handled='error';
-  }
-  return handled;
-}
-function trySilentRefresh(){
-  if(!(window.google && google.accounts && google.accounts.oauth2)) return;
-  try{
-    const tc=google.accounts.oauth2.initTokenClient({
-      client_id: getClientId(),
-      scope: DRIVE_SCOPE,
-      ux_mode: 'popup',
-      callback: function(resp){
-        if(resp && resp.access_token){ storeToken(resp.access_token, parseInt(resp.expires_in||'3600',10)); setSyncStatus('synced'); syncNow('startup'); }
-      },
-      error_callback: function(){ if(syncStatus!=='error') setSyncStatus('disconnected'); }
-    });
-    tc.requestAccessToken({ prompt: '' });
-  }catch(e){ setSyncStatus('disconnected'); }
-}
-async function driveFetch(path, opts){
-  const tok=getValidToken(); if(!tok) throw new Error('no token');
-  const res=await fetch(DRIVE_API+path, Object.assign({}, opts||{}, { headers: Object.assign({ Authorization:'Bearer '+tok }, (opts&&opts.headers)||{}) }));
-  return res;
-}
-/* ---------- 中継（Apps Script）: v1.8 ----------
-   A relay deployed under the user's own Google account reads and
-   writes movie.json for the app (server-side name allowlist +
-   shared secret). When configured, sync needs no Google token at
-   all, so the connection can never lapse. URL + secret live only in
-   this device's localStorage. GIS remains the fallback. In relay
-   mode a file's "id" is simply its name. */
 const LS_RELAY='movie.relay';
 const RELAY_URL_DEFAULT='https://script.google.com/macros/s/AKfycbziV1Wpv7AWSUJJgaKyRzFeBR81Td4CjryGGuq4avt1xAo-e2mbeyS2vBpCuqx4_KI/exec';
 function relayCfg(){ try{ const r=JSON.parse(storeGet(LS_RELAY)||'null'); return (r && r.secret) ? { url: r.url || RELAY_URL_DEFAULT, secret: r.secret } : null; }catch(e){ return null; } }
@@ -1194,62 +1217,34 @@ function relaySaveAndTest(){
   storeSet(LS_RELAY, JSON.stringify({ url:url, secret:secret }));
   if(st) st.textContent='接続テスト中…';
   relayCall('ping').then(()=>{
-    if(st) st.textContent='接続OK — この端末では Google ログインなしで同期します。';
+    if(st) st.textContent='接続OK — 中継で同期します。';
     renderSyncStatus();
     syncNow('relay');
   }).catch(e=>{ if(st) st.textContent='接続に失敗しました：'+((e && e.message) || e); });
 }
 function relayClear(){
   storeDel(LS_RELAY);
-  renderSettings(); renderSyncStatus();
+  setSyncStatus('disconnected');
+  renderSettings();
 }
 async function findMovieFile(){
-  if(relayReady()){
-    const j=await relayCall('stat', DRIVE_FILE_NAME);
-    return j.exists ? { id:DRIVE_FILE_NAME, name:DRIVE_FILE_NAME } : null;
-  }
-  const q=encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
-  const res=await driveFetch('/files?q='+q+'&fields='+encodeURIComponent('files(id,name,createdTime)')+'&orderBy=createdTime');
-  if(!res.ok) throw new Error('files.list HTTP '+res.status);
-  const j=await res.json();
-  const files=(j.files||[]).filter(f=>f.name===DRIVE_FILE_NAME);
-  return files.length ? files[0] : null;
+  const j=await relayCall('stat', DRIVE_FILE_NAME);
+  return j.exists ? { id:DRIVE_FILE_NAME, name:DRIVE_FILE_NAME } : null;
 }
 async function downloadMovie(fileId){
-  if(relayReady()){
-    const j=await relayCall('get', DRIVE_FILE_NAME);
-    return normalizeData(JSON.parse(j.content));
-  }
-  const res=await driveFetch('/files/'+encodeURIComponent(fileId)+'?alt=media');
-  if(!res.ok) throw new Error('download HTTP '+res.status);
-  const text=await res.text();
-  return normalizeData(JSON.parse(text));
+  const j=await relayCall('get', DRIVE_FILE_NAME);
+  return normalizeData(JSON.parse(j.content));
 }
 async function uploadMovieUpdate(fileId, data){
-  if(relayReady()){ await relayCall('put', DRIVE_FILE_NAME, JSON.stringify(data)); return; }
-  const tok=getValidToken(); if(!tok) throw new Error('no token');
-  const res=await fetch(UPLOAD_API+'/files/'+encodeURIComponent(fileId)+'?uploadType=media', {
-    method:'PATCH',
-    headers:{ Authorization:'Bearer '+tok, 'Content-Type':'application/json' },
-    body: JSON.stringify(data)
-  });
-  if(!res.ok) throw new Error('update HTTP '+res.status);
+  await relayCall('put', DRIVE_FILE_NAME, JSON.stringify(data));
 }
 async function createMovie(data){
-  if(relayReady()){ await relayCall('put', DRIVE_FILE_NAME, JSON.stringify(data)); return { id:DRIVE_FILE_NAME }; }
-  const tok=getValidToken(); if(!tok) throw new Error('no token');
-  const meta={ name:DRIVE_FILE_NAME, mimeType:'application/json' };
-  const form=new FormData();
-  form.append('metadata', new Blob([JSON.stringify(meta)], { type:'application/json' }));
-  form.append('file', new Blob([JSON.stringify(data)], { type:'application/json' }), DRIVE_FILE_NAME);
-  const res=await fetch(UPLOAD_API+'/files?uploadType=multipart&fields=id', { method:'POST', headers:{ Authorization:'Bearer '+tok }, body: form });
-  if(!res.ok) throw new Error('create HTTP '+res.status);
-  return res.json();
+  await relayCall('put', DRIVE_FILE_NAME, JSON.stringify(data));
+  return { id:DRIVE_FILE_NAME };
 }
 async function syncNow(reason){
   if(syncRunning) return;
-  const tok=getValidToken();
-  if(!tok && !relayReady()){ setSyncStatus('disconnected'); return; }
+  if(!relayReady()){ setSyncStatus('disconnected'); return; }
   syncRunning=true; setSyncStatus('syncing');
   try{
     const file=await findMovieFile();
@@ -1273,7 +1268,7 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='1.10';
+const APP_VERSION='1.11';
 { const vb=$('verBadge'); if(vb) vb.textContent='v'+APP_VERSION; }
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
@@ -1281,7 +1276,6 @@ function splashGo(){
   setTimeout(()=>{ try{ sp.remove(); }catch(e){} }, 520);
 }
 function checkForUpdate(){
-  if(location.hash && location.hash.indexOf('access_token')>=0){ splashGo(); return; }
   try{
     fetch(location.pathname+'?cv='+Date.now(), { cache:'no-store' })
       .then(r=>r.text())
@@ -1319,22 +1313,10 @@ document.addEventListener('touchstart', function(){}, { passive:true });
   }
   renderAll();
   requestAnimationFrame(()=>{ moveNavInd(false); pinNav(); });
-  const authResult=checkAuthRedirect();
   renderSyncStatus();
   if(relayReady()){
-    /* v1.8: a configured relay needs no token — sync on open. */
+    /* a configured relay needs no login — sync on open. */
     setTimeout(()=>syncNow('startup'), 300);
-  } else if(authResult==='token'){
-    setSyncStatus('syncing');
-    setTimeout(()=>syncNow('connect'), 300);
-  } else if(authResult==='error'){
-    /* keep the auth error visible */
-  } else if(isDriveConnected()){
-    setTimeout(()=>syncNow('startup'), 300);
-  } else if(storeGet(LS_AUTH_ERR)){
-    setSyncStatus('error', storeGet(LS_AUTH_ERR));
-  } else {
-    setTimeout(trySilentRefresh, 800);
   }
   checkForUpdate();
 })();
