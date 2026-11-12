@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="1.12">
-<title>映画</title>
-<meta name="application-name" content="映画">
-<meta name="apple-mobile-web-app-title" content="映画">
+<meta name="app-version" content="1.13">
+<title>Cinelabo</title>
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="application-name" content="Cinelabo">
+<meta name="apple-mobile-web-app-title" content="Cinelabo">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1048,7 +1050,7 @@ function renderSettingsPanel(){
   else if(settingsPanel==='about'){
     p.innerHTML = panelShell('このアプリについて',
       '<div class="setbox">'+
-      '<div class="note" style="margin:0">映画おすすめアプリ（独立版） v'+APP_VERSION+' ／ データは端末内と、接続時はあなたの Google Drive に保存されます。</div>'+
+      '<div class="note" style="margin:0">Cinelabo v'+APP_VERSION+' ／ データは端末内と、接続時はあなたの Google Drive に保存されます。</div>'+
       '<div class="note">This product uses the TMDB API but is not endorsed or certified by TMDB.</div></div>');
   }
 }
@@ -1268,7 +1270,7 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='1.12';
+const APP_VERSION='1.13';
 { const vb=$('verBadge'); if(vb) vb.textContent='v'+APP_VERSION; }
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
