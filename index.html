@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="1.7">
+<meta name="app-version" content="1.8">
 <title>映画</title>
 <meta name="application-name" content="映画">
 <meta name="apple-mobile-web-app-title" content="映画">
@@ -795,6 +795,13 @@ function renderSettings(){
     '<div class="btnrow"><button class="btn primary" onclick="connectDrive()">Google Driveと接続</button><button class="btn" onclick="syncNow(\'manual\')">今すぐ同期</button><button class="btn" onclick="disconnectDrive()">切断</button></div>'+
     '<div class="syncstat" id="syncstat"></div>'+
     '<div class="note">同期先は Drive 上の「movie.json」（このアプリが作成したファイルのみ読み書きします）。未接続でも端末内で全機能が使えます。</div></div>';
+  const rc=relayCfg();
+  h+='<div class="secttl">中継（Apps Script）</div><div class="setbox"><h3>中継</h3>'+
+    '<input class="textin" id="relay-url-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="中継の URL（https://script.google.com/macros/s/…）" value="'+(rc ? escA(rc.url) : '')+'">'+
+    '<input class="textin" id="relay-secret-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="シークレット" value="'+(rc ? escA(rc.secret) : '')+'" style="margin-top:8px">'+
+    '<div class="btnrow"><button class="btn primary" onclick="relaySaveAndTest()">保存して接続テスト</button>'+(rc ? '<button class="btn" onclick="relayClear()">中継を解除</button>' : '')+'</div>'+
+    '<div class="syncstat" id="relaystat">'+(rc ? '設定済みです。接続テストで中継の応答を確認できます。' : '未設定です。')+'</div>'+
+    '<div class="note">あなたの Google アカウントの中で動く中継経由で同期します。設定すると Google ログインが不要になり、アプリを落としても接続が切れません。URL とシークレットはこの端末内にだけ保存されます。</div></div>';
   h+='<div class="secttl">データ</div><div class="setbox"><h3>データのインポート</h3>'+
     '<div class="note" style="margin-top:0">移行用ファイル（movie.json と同じ形式の JSON）を読み込み、今のデータを置き換えます。一度だけ使う想定の機能です。</div>'+
     '<div class="btnrow"><button class="btn" onclick="document.getElementById(\'importfile\').click()">JSONファイルを読み込む</button></div></div>';
@@ -899,17 +906,18 @@ function renderSyncStatus(){
   if(syncStatus==='synced') label='同期済み'+(lastSyncAt ? '（'+pad2(new Date(lastSyncAt).getHours())+':'+pad2(new Date(lastSyncAt).getMinutes())+'）' : '');
   else if(syncStatus==='syncing') label='同期中…';
   else if(syncStatus==='error'){ label='同期エラー'+(syncMsg ? '：'+syncMsg : ''); cls='err'; }
+  else if(relayReady()) label='中継で接続済み（未同期）';
   else label='Drive未接続（端末内に保存中）';
   const bar=$('syncbar'); if(bar) bar.innerHTML='<span class="'+cls+'">'+esc(label)+'</span>';
   const st=$('syncstat'); if(st) st.innerHTML='<span class="'+cls+'">'+esc(label)+'</span>';
   const pill=$('syncpill');
   if(pill){
-    pill.textContent = syncStatus==='synced' ? '同期済み' : (syncStatus==='syncing' ? '同期中…' : (syncStatus==='error' ? '同期エラー' : '未接続'));
+    pill.textContent = syncStatus==='synced' ? '同期済み' : (syncStatus==='syncing' ? '同期中…' : (syncStatus==='error' ? '同期エラー' : (relayReady() ? '中継で接続済み' : '未接続')));
     pill.className='syncpill'+(syncStatus==='synced'?' ok':(syncStatus==='error'?' err':''));
   }
 }
 function scheduleSync(){
-  if(!isDriveConnected()) return;
+  if(!isDriveConnected() && !relayReady()) return;
   if(syncTimer) clearTimeout(syncTimer);
   syncTimer=setTimeout(()=>{ syncNow('auto'); }, 1500);
 }
@@ -1000,7 +1008,45 @@ async function driveFetch(path, opts){
   const res=await fetch(DRIVE_API+path, Object.assign({}, opts||{}, { headers: Object.assign({ Authorization:'Bearer '+tok }, (opts&&opts.headers)||{}) }));
   return res;
 }
+/* ---------- 中継（Apps Script）: v1.8 ----------
+   A relay deployed under the user's own Google account reads and
+   writes movie.json for the app (server-side name allowlist +
+   shared secret). When configured, sync needs no Google token at
+   all, so the connection can never lapse. URL + secret live only in
+   this device's localStorage. GIS remains the fallback. In relay
+   mode a file's "id" is simply its name. */
+const LS_RELAY='movie.relay';
+function relayCfg(){ try{ const r=JSON.parse(storeGet(LS_RELAY)||'null'); return (r && r.url && r.secret) ? r : null; }catch(e){ return null; } }
+function relayReady(){ return !!relayCfg(); }
+async function relayCall(op, name, content){
+  const c=relayCfg(); if(!c) throw new Error('中継が未設定です');
+  const res=await fetch(c.url, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify({ secret:c.secret, op:op, name:name, content:content }) });
+  if(!res.ok) throw new Error('中継 HTTP '+res.status);
+  const j=JSON.parse(await res.text());
+  if(!j || !j.ok) throw new Error('中継エラー：'+((j && j.error) || 'unknown'));
+  return j;
+}
+function relaySaveAndTest(){
+  const u=$('relay-url-in'), s=$('relay-secret-in'), st=$('relaystat');
+  const url=(u ? u.value : '').trim(), secret=(s ? s.value : '').trim();
+  if(!url || !secret){ if(st) st.textContent='URL とシークレットの両方を入力してください'; return; }
+  storeSet(LS_RELAY, JSON.stringify({ url:url, secret:secret }));
+  if(st) st.textContent='接続テスト中…';
+  relayCall('ping').then(()=>{
+    if(st) st.textContent='接続OK — この端末では Google ログインなしで同期します。';
+    renderSyncStatus();
+    syncNow('relay');
+  }).catch(e=>{ if(st) st.textContent='接続に失敗しました：'+((e && e.message) || e); });
+}
+function relayClear(){
+  storeDel(LS_RELAY);
+  renderSettings(); renderSyncStatus();
+}
 async function findMovieFile(){
+  if(relayReady()){
+    const j=await relayCall('stat', DRIVE_FILE_NAME);
+    return j.exists ? { id:DRIVE_FILE_NAME, name:DRIVE_FILE_NAME } : null;
+  }
   const q=encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
   const res=await driveFetch('/files?q='+q+'&fields='+encodeURIComponent('files(id,name,createdTime)')+'&orderBy=createdTime');
   if(!res.ok) throw new Error('files.list HTTP '+res.status);
@@ -1009,12 +1055,17 @@ async function findMovieFile(){
   return files.length ? files[0] : null;
 }
 async function downloadMovie(fileId){
+  if(relayReady()){
+    const j=await relayCall('get', DRIVE_FILE_NAME);
+    return normalizeData(JSON.parse(j.content));
+  }
   const res=await driveFetch('/files/'+encodeURIComponent(fileId)+'?alt=media');
   if(!res.ok) throw new Error('download HTTP '+res.status);
   const text=await res.text();
   return normalizeData(JSON.parse(text));
 }
 async function uploadMovieUpdate(fileId, data){
+  if(relayReady()){ await relayCall('put', DRIVE_FILE_NAME, JSON.stringify(data)); return; }
   const tok=getValidToken(); if(!tok) throw new Error('no token');
   const res=await fetch(UPLOAD_API+'/files/'+encodeURIComponent(fileId)+'?uploadType=media', {
     method:'PATCH',
@@ -1024,6 +1075,7 @@ async function uploadMovieUpdate(fileId, data){
   if(!res.ok) throw new Error('update HTTP '+res.status);
 }
 async function createMovie(data){
+  if(relayReady()){ await relayCall('put', DRIVE_FILE_NAME, JSON.stringify(data)); return { id:DRIVE_FILE_NAME }; }
   const tok=getValidToken(); if(!tok) throw new Error('no token');
   const meta={ name:DRIVE_FILE_NAME, mimeType:'application/json' };
   const form=new FormData();
@@ -1036,7 +1088,7 @@ async function createMovie(data){
 async function syncNow(reason){
   if(syncRunning) return;
   const tok=getValidToken();
-  if(!tok){ setSyncStatus('disconnected'); return; }
+  if(!tok && !relayReady()){ setSyncStatus('disconnected'); return; }
   syncRunning=true; setSyncStatus('syncing');
   try{
     const file=await findMovieFile();
@@ -1060,7 +1112,7 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='1.7';
+const APP_VERSION='1.8';
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
   sp.classList.remove('wait'); sp.classList.add('hide');
@@ -1106,7 +1158,10 @@ document.addEventListener('touchstart', function(){}, { passive:true });
   renderAll();
   const authResult=checkAuthRedirect();
   renderSyncStatus();
-  if(authResult==='token'){
+  if(relayReady()){
+    /* v1.8: a configured relay needs no token — sync on open. */
+    setTimeout(()=>syncNow('startup'), 300);
+  } else if(authResult==='token'){
     setSyncStatus('syncing');
     setTimeout(()=>syncNow('connect'), 300);
   } else if(authResult==='error'){
