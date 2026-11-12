@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="1.13">
+<meta name="app-version" content="2.0">
 <title>Cinelabo</title>
-<link rel="icon" type="image/png" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="IMG_2555.png">
+<link rel="apple-touch-icon" href="IMG_2555.png">
 <meta name="application-name" content="Cinelabo">
 <meta name="apple-mobile-web-app-title" content="Cinelabo">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,33 +20,46 @@
   body {
     --fs: 16px;
     --uifont: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", sans-serif;
-    --bg:#000000; --bg2:#101012; --card:#26262b; --card2:#33333a;
-    --text:#f4f4f6; --muted:#9c9ca4; --accent:#d9d9e0; --line:#33333a;
-    --danger:#ff453a; --nav:rgba(26,26,30,.92); --gold:#e8c268;
+    /* David Lynch palette: velvet night / curtain crimson / antique gold */
+    --bg:#0F1328; --bg2:#171D38; --card:#1A2138; --card2:#232C4A;
+    --text:#EDE6D6; --muted:#9AA3B8; --accent:#A31621; --line:rgba(237,230,214,.30);
+    --line2:rgba(237,230,214,.14); --dash:rgba(194,155,64,.45);
+    --danger:#C1272D; --nav:#0A0D18; --gold:#C29B40;
+    --inkfill:#05070F; --bar:#3A4568;
     background: var(--bg); color: var(--text);
     font-family: var(--uifont);
     font-size: var(--fs); line-height: 1.6;
-    padding-bottom: 108px;
+    padding-bottom: 126px;
     -webkit-text-size-adjust: 100%;
   }
   button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0; }
-  button:active { filter: brightness(1.32); }
+  button:active { filter: brightness(1.25); }
   input, textarea, select { font: inherit; color: inherit; }
-  a { color: var(--accent); }
+  a { color: var(--gold); }
 
-  .topbar {
+  /* ---------- app header ---------- */
+  #appbar {
     position: sticky; top: 0; z-index: 30;
-    display: flex; align-items: center; gap: 6px;
-    padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 10px;
     background: var(--bg);
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 0;
+    border-bottom: 1px solid var(--line2);
   }
-  .topbar .ttl { flex: 1; text-align: center; font-size: calc(var(--fs) * 1.12); letter-spacing: .08em; font-weight: 700; }
-  .spacer44 { width: 44px; flex: none; }
-
-  #syncbar { display: block; width: 100%; background: none; border: none; text-align: center; font-size: calc(var(--fs) * .8); color: var(--muted); padding: 1px 16px 7px; min-height: 1.2em; letter-spacing: .03em; font-family: inherit; cursor: pointer; }
+  .abrow { display: flex; align-items: center; gap: 8px; max-width: 720px; margin: 0 auto; }
+  #apptitle { font-size: calc(var(--fs) * 1.18); font-weight: 800; letter-spacing: .14em; white-space: nowrap; }
+  #apptitle .ayr { color: var(--accent); margin-left: 2px; }
+  #apptitle .ajp { font-size: calc(var(--fs) * .78); letter-spacing: .1em; color: var(--muted); margin-left: 6px; font-weight: 700; }
+  #syncdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #e5484d; flex: none; }
+  .abbtns { margin-left: auto; display: flex; gap: 8px; flex: none; }
+  .hbtn {
+    width: 44px; height: 44px; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 4px; color: var(--text);
+  }
+  .hbtn svg { width: 21px; height: 21px; }
+  .hbtn.on { background: var(--accent); border-color: var(--accent); color: var(--text); }
+  #syncbar { display: block; width: 100%; max-width: 720px; margin: 0 auto; background: none; border: none; text-align: center; font-size: calc(var(--fs) * .78); color: var(--muted); padding: 3px 16px 7px; min-height: 1.2em; letter-spacing: .03em; font-family: inherit; cursor: pointer; }
   #syncbar .err { color: var(--danger); }
-  .sbhint { color: var(--accent); }
-  #syncdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 7px; background: #e5484d; vertical-align: 2px; }
+  .sbhint { color: var(--gold); font-weight: 700; }
 
   main { max-width: 720px; margin: 0 auto; padding: 0 14px; }
   .view { display: none; min-height: calc(100dvh + 2px); }
@@ -66,72 +79,95 @@
   #splash { position: fixed; inset: 0; z-index: 200; background: #000; transition: opacity .45s ease; }
   #splash.hide { opacity: 0; pointer-events: none; }
 
-  /* ---------- pill nav ---------- */
-  #pillnav {
-    position: fixed; left: 0; right: 0; margin-left: auto; margin-right: auto;
-    bottom: 15px; z-index: 60;
-    width: calc(100vw - 92px); max-width: 430px; height: 56px;
-    display: flex; gap: 0; padding: 5px; box-sizing: border-box;
-    background: var(--nav); border: 1px solid var(--line); border-radius: 999px;
-    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-  }
-  #pillnav button {
-    position: relative; z-index: 1; flex: 1; height: 100%;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-    padding: 0; border-radius: 999px;
-    font-size: 10px; font-weight: 500; color: var(--muted); line-height: 1.25; white-space: nowrap;
-    transition: color .3s;
-  }
-  #pillnav button svg { width: 21px; height: 21px; }
-  #pillnav button.on { color: var(--text); font-weight: 600; }
-  #navind {
-    position: absolute; top: 5px; bottom: 5px; left: 0; width: 0; border-radius: 999px; pointer-events: none;
-    background: var(--card2);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--text) 21%, transparent), color-mix(in srgb, var(--text) 8%, transparent) 58%, color-mix(in srgb, var(--text) 13%, transparent));
-    border: 1px solid color-mix(in srgb, var(--text) 16%, transparent);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.25), inset 0 -6px 10px rgba(255,255,255,.05), 0 2px 10px rgba(0,0,0,.20);
-    transition: left .45s cubic-bezier(.25,1,.3,1), width .45s cubic-bezier(.25,1,.3,1);
+  /* ---------- chevron strip (Black Lodge floor, slim band above the bar) ---------- */
+  #chev {
+    position: fixed; left: 0; right: 0; z-index: 59;
+    bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+    height: 8px; pointer-events: none; opacity: .92;
+    background-color: #EDE6D6;
+    background-image:
+      linear-gradient(135deg, #05070F 25%, transparent 25%),
+      linear-gradient(225deg, #05070F 25%, transparent 25%),
+      linear-gradient(45deg, #05070F 25%, transparent 25%),
+      linear-gradient(315deg, #05070F 25%, #EDE6D6 25%);
+    background-position: 4px 0, 4px 0, -4px 0, -4px 0;
+    background-size: 8px 8px;
+    background-repeat: repeat-x;
   }
 
+  /* ---------- bottom tab bar (full-width velvet bar) ---------- */
+  #tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    display: flex;
+    background: var(--nav);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -1px 0 rgba(237,230,214,.12);
+  }
+  #tabbar button {
+    flex: 1; min-height: 58px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    padding: 7px 0 6px;
+    font-size: 10px; font-weight: 500; color: #7C869C; line-height: 1.25; white-space: nowrap;
+  }
+  #tabbar button svg { width: 22px; height: 22px; }
+  #tabbar button.on { color: var(--text); font-weight: 700; }
+  #tabbar button.on svg { color: var(--gold); }
+
+  /* ---------- floating + button ---------- */
+  #fab {
+    position: fixed; right: 16px; z-index: 65;
+    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--accent); color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,.55);
+    border: 2px solid rgba(237,230,214,.35);
+  }
+  #fab svg { width: 26px; height: 26px; }
+  #fab:active { transform: scale(.94); }
+
   /* ---------- generic ---------- */
-  .secttl { font-size: calc(var(--fs) * 1.0); font-weight: 700; margin: 16px 2px 8px; }
-  .secttl:first-child { margin-top: 2px; }
+  .caps { letter-spacing: .22em; font-weight: 800; }
+  .secttl { font-size: calc(var(--fs) * 1.0); font-weight: 800; letter-spacing: .18em; margin: 20px 2px 10px; }
+  .secttl:first-child { margin-top: 4px; }
+  .secttl .jp { letter-spacing: .08em; font-size: calc(var(--fs) * .8); color: var(--muted); margin-left: 8px; font-weight: 700; }
   .note { font-size: calc(var(--fs) * .82); color: var(--muted); margin: 6px 2px; }
-  .card { background: var(--card); border-radius: 14px; padding: 12px; margin-bottom: 10px; }
+  .card { background: var(--card); border: 1.5px solid var(--line); border-radius: 6px; padding: 12px; margin-bottom: 12px; }
   .btn {
     display: inline-flex; align-items: center; justify-content: center;
-    min-height: 48px; padding: 11px 20px; border-radius: 999px;
+    min-height: 48px; padding: 11px 18px; border-radius: 4px;
     background: var(--card2); color: var(--text); font-size: calc(var(--fs) * .9);
-    border: 1px solid var(--line);
+    border: 1.5px solid var(--line); font-weight: 600;
   }
-  .btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
-  .btn.danger { color: var(--danger); }
+  .btn.primary { background: var(--accent); color: var(--text); border-color: rgba(237,230,214,.4); font-weight: 700; }
+  .btn.danger { color: var(--danger); border-color: var(--danger); }
   .btn.small { min-height: 44px; padding: 8px 14px; font-size: calc(var(--fs) * .85); }
-  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .textin, .selin {
-    width: 100%; background: var(--bg2); border: 1px solid var(--line); border-radius: 10px;
+    width: 100%; background: #121830; border: 1.5px solid var(--line); border-radius: 4px;
     padding: 11px 12px; font-size: 16px; color: var(--text);
   }
   .selin { width: auto; }
   select.textin, select.selin { appearance: auto; }
   .chips { display: flex; gap: 8px; flex-wrap: wrap; }
   .chip {
-    min-height: 48px; padding: 7px 13px; border-radius: 999px;
-    background: var(--card); border: 1px solid var(--line); color: var(--muted);
-    font-size: calc(var(--fs) * .8);
+    min-height: 48px; padding: 7px 14px; border-radius: 4px;
+    background: var(--card); border: 1.5px solid var(--line); color: var(--muted);
+    font-size: calc(var(--fs) * .82); font-weight: 600;
   }
-  .chip.on { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+  .chip.on { background: var(--accent); color: var(--text); border-color: rgba(237,230,214,.4); font-weight: 700; }
   .reasonchip {
-    display: inline-block; padding: 3px 9px; border-radius: 999px; margin: 0 5px 5px 0;
-    background: var(--bg2); border: 1px solid var(--line); font-size: calc(var(--fs) * .76); color: var(--accent);
+    display: inline-block; padding: 3px 9px; border-radius: 3px; margin: 0 5px 5px 0;
+    background: var(--bg2); border: 1px solid var(--line); font-size: calc(var(--fs) * .76); color: var(--text);
   }
-  .empty { text-align: center; color: var(--muted); padding: 24px 12px; font-size: calc(var(--fs) * .9); }
+  .empty { text-align: center; color: var(--muted); padding: 24px 12px; font-size: calc(var(--fs) * .9); border: 1.5px dashed var(--dash); border-radius: 6px; }
 
   /* ---------- poster (fixed 2:3 box, never stretches) ---------- */
   .poster {
     position: relative; flex: none; align-self: flex-start;
-    aspect-ratio: 2 / 3; border-radius: 8px; overflow: hidden;
-    background: var(--card2); cursor: pointer; padding: 0; display: block;
+    aspect-ratio: 2 / 3; border-radius: 3px; overflow: hidden;
+    background: var(--card2); border: 1px solid var(--line);
+    cursor: pointer; padding: 0; display: block;
   }
   .poster .pfb {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -140,35 +176,69 @@
   }
   .poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
+  /* ---------- home hero ---------- */
+  .hero {
+    position: relative; overflow: hidden;
+    border: 1.5px solid var(--line); border-radius: 6px; background: var(--card);
+    padding: 16px 16px 14px; margin: 14px 0 6px;
+  }
+  .hero .mc1 {
+    position: absolute; width: 190px; height: 190px; border-radius: 50%;
+    background: var(--gold); right: -64px; top: -84px; opacity: .8; pointer-events: none;
+  }
+  .hero .mc2 {
+    position: absolute; width: 44px; height: 44px; border-radius: 50%;
+    background: var(--accent); right: 118px; top: -16px; opacity: .9; pointer-events: none;
+  }
+  .hero .hkick { position: relative; font-size: calc(var(--fs) * .8); color: var(--muted); }
+  .bignums { position: relative; display: flex; margin-top: 6px; }
+  .bignum { flex: 1; }
+  .bignum + .bignum { border-left: 1.5px dashed var(--dash); padding-left: 16px; }
+  .bignum .bn { font-size: 46px; font-weight: 800; line-height: 1.05; letter-spacing: .01em; }
+  .bignum .bn .unit { font-size: 20px; color: var(--accent); font-weight: 800; margin-left: 3px; }
+  .bignum .bl { font-size: calc(var(--fs) * .78); color: var(--muted); letter-spacing: .12em; font-weight: 700; margin-top: 2px; }
+
+  /* ---------- RECENT rows ---------- */
+  .recent { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1.5px dashed var(--dash); }
+  .recent:last-child { border-bottom: none; }
+  .recent .rmain { flex: 1; min-width: 0; }
+  .recent .rside { flex: none; text-align: right; }
+  .recent .rdate { font-size: calc(var(--fs) * .8); color: var(--muted); font-weight: 700; letter-spacing: .05em; }
+  .recent .provtop { font-size: calc(var(--fs) * .8); font-weight: 700; color: var(--gold); margin-top: 1px; }
+  .recent .provtop:empty { display: none; }
+  .stars .st { color: var(--gold); font-size: calc(var(--fs) * .86); letter-spacing: 1px; }
+  .stars .stnum { font-weight: 800; font-size: calc(var(--fs) * .86); margin-left: 3px; }
+  .stars .norating { color: var(--muted); font-size: calc(var(--fs) * .78); }
+
   /* ---------- recommendation ---------- */
   .recrow { display: flex; gap: 12px; }
   .recmain { flex: 1; min-width: 0; }
   .ftitle { font-size: calc(var(--fs) * 1.02); font-weight: 700; line-height: 1.4; }
   .forig { font-size: calc(var(--fs) * .8); color: var(--muted); margin-top: 1px; }
   .fmeta { font-size: calc(var(--fs) * .82); color: var(--muted); margin-top: 2px; }
-  .provline { font-size: calc(var(--fs) * .8); color: var(--accent); margin-top: 3px; }
+  .provline { font-size: calc(var(--fs) * .8); color: #B9C0D0; font-weight: 600; margin-top: 3px; }
   .provline:empty { display: none; }
   .hook { font-size: calc(var(--fs) * .9); margin-top: 6px; }
   .scorebox { text-align: center; flex: none; }
-  .scorebox .num { font-size: 26px; font-weight: 800; color: var(--gold); line-height: 1.1; }
-  .scorebox .lbl { font-size: 10.5px; color: var(--muted); letter-spacing: .06em; }
-  .topbadge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #000; background: var(--gold); border-radius: 6px; padding: 2px 8px; margin-bottom: 6px; }
-  .ranknum { font-size: calc(var(--fs) * .85); color: var(--muted); font-weight: 700; margin-bottom: 3px; }
+  .scorebox .num { font-size: 27px; font-weight: 800; color: var(--accent); line-height: 1.1; }
+  .scorebox .lbl { font-size: 10.5px; color: var(--muted); letter-spacing: .08em; font-weight: 700; }
+  .topbadge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--text); background: var(--accent); border: 1.5px solid rgba(194,155,64,.65); border-radius: 3px; padding: 2px 9px; margin-bottom: 8px; }
+  .ranknum { font-size: calc(var(--fs) * .85); color: var(--gold); font-weight: 800; margin-bottom: 3px; letter-spacing: .08em; }
 
   .axisbars { margin-top: 8px; }
   .axisrow { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: calc(var(--fs) * .76); }
   .axisrow .al { width: 80px; flex: none; color: var(--muted); }
-  .axisrow .bar { position: relative; flex: 1; height: 6px; border-radius: 3px; background: var(--bg2); }
-  .axisrow .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--accent); }
-  .axisrow .tgt { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--gold); border-radius: 1px; }
+  .axisrow .bar { position: relative; flex: 1; height: 6px; background: var(--bg2); border: 1px solid var(--line2); }
+  .axisrow .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+  .axisrow .tgt { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--gold); }
   .axisrow .av { width: 52px; flex: none; text-align: right; color: var(--text); }
 
   /* ---------- criteria ---------- */
-  .critrow { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .critrow { padding: 10px 0; border-bottom: 1.5px dashed var(--dash); }
   .critrow:last-child { border-bottom: none; }
   .crithead { display: flex; align-items: baseline; gap: 8px; }
   .crithead .cl { font-weight: 700; }
-  .crithead .cv { margin-left: auto; font-weight: 700; color: var(--gold); }
+  .crithead .cv { margin-left: auto; font-weight: 800; color: var(--gold); }
   .crithint { font-size: calc(var(--fs) * .8); color: var(--muted); margin-top: 2px; }
   input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--accent); }
 
@@ -178,11 +248,11 @@
   .fieldrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
   .fieldrow label { font-size: calc(var(--fs) * .78); color: var(--muted); display: flex; align-items: center; gap: 6px; }
   .fieldrow input[type="date"], .fieldrow input[type="text"].memo {
-    background: var(--bg2); border: 1px solid var(--line); border-radius: 10px;
+    background: #121830; border: 1.5px solid var(--line); border-radius: 4px;
     padding: 9px 10px; font-size: 16px; color: var(--text); color-scheme: dark;
   }
   .fieldrow input[type="text"].memo { flex: 1; min-width: 140px; }
-  .statusbadge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--line); color: var(--muted); margin-left: 6px; vertical-align: 2px; }
+  .statusbadge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 3px; background: var(--bg2); border: 1.5px solid var(--line); color: var(--text); font-weight: 700; margin-left: 6px; vertical-align: 2px; }
   .searchrow { display: flex; gap: 8px; }
   .searchrow .textin { flex: 1; }
   .searchrow .btn { flex: none; }
@@ -190,12 +260,83 @@
   .formgrid label { display: block; font-size: calc(var(--fs) * .8); color: var(--muted); margin: 8px 0 4px; }
   .formgrid .textin { margin-top: 0; }
 
-  /* ---------- settings (diary/zukan composition: pillrow + groupcard/srow + panels) ---------- */
-  .groupcard { background: var(--card); border-radius: 26px; padding: 4px 20px; margin-bottom: 26px; }
+  /* ---------- segment control ---------- */
+  .segrow { display: flex; border: 1.5px solid var(--line); border-radius: 4px; overflow: hidden; margin: 12px 0 14px; background: var(--card); }
+  .segrow .seg { flex: 1; min-height: 46px; font-size: calc(var(--fs) * .86); font-weight: 600; color: var(--muted); border-right: 1.5px solid var(--line); }
+  .segrow .seg:last-child { border-right: none; }
+  .segrow .seg.on { background: var(--accent); color: var(--text); font-weight: 700; }
+
+  /* ---------- stubs （半券） ---------- */
+  .stubgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 12px; }
+  .stubp { width: 100%; }
+  .ribbon {
+    position: absolute; top: 0; right: 7px; z-index: 2;
+    background: var(--accent); color: var(--text);
+    font-size: 10px; font-weight: 800; letter-spacing: .02em;
+    padding: 3px 5px 7px; line-height: 1.15; text-align: center;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  }
+  .ribbon .rst { color: var(--gold); }
+  .datestrip {
+    position: absolute; left: 0; bottom: 7px; z-index: 2;
+    background: var(--inkfill); color: var(--text);
+    font-size: 10px; font-weight: 700; letter-spacing: .06em; padding: 2px 7px;
+  }
+  .datestrip.none { background: #3A4258; color: var(--muted); }
+
+  /* ---------- calendar ---------- */
+  .calhead { display: flex; align-items: center; gap: 8px; margin: 12px 0 10px; }
+  .calhead .cm { font-size: calc(var(--fs) * 1.22); font-weight: 800; letter-spacing: .04em; }
+  .calnav { width: 44px; height: 44px; flex: none; display: inline-flex; align-items: center; justify-content: center; color: var(--accent); font-size: 26px; font-weight: 800; line-height: 1; }
+  .calcount { margin-left: auto; background: var(--accent); color: var(--text); font-size: calc(var(--fs) * .8); font-weight: 700; border-radius: 3px; padding: 3px 10px; letter-spacing: .06em; }
+  .calgrid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1.5px solid var(--line); border-left: 1.5px solid var(--line); background: var(--card); }
+  .calwd { text-align: center; font-size: 11px; font-weight: 800; letter-spacing: .1em; color: var(--muted); padding: 6px 0; border-right: 1px solid var(--line2); border-bottom: 1.5px solid var(--line); }
+  .calwd.sun { color: var(--accent); }
+  .calcell { position: relative; aspect-ratio: 3 / 4; border-right: 1px solid var(--line2); border-bottom: 1px solid var(--line2); overflow: hidden; }
+  .calcell .cald { position: absolute; top: 3px; left: 5px; z-index: 2; font-size: 10.5px; font-weight: 700; color: var(--muted); }
+  .calcell.hasfilm .cald { background: var(--bg); border: 1px solid var(--line); padding: 0 4px; color: var(--text); }
+  .calcell.today { box-shadow: inset 0 0 0 2px var(--accent); }
+  .calcell.today::after {
+    content: ''; position: absolute; top: 0; right: 0; z-index: 3;
+    border-style: solid; border-width: 0 13px 13px 0;
+    border-color: transparent var(--accent) transparent transparent;
+  }
+  .calcell .calposter { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; display: block; background: var(--card2); border: none; cursor: pointer; }
+  .calcell .calposter img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .calcell .calmore { position: absolute; right: 3px; bottom: 3px; z-index: 2; background: var(--inkfill); color: var(--text); font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 2px; }
+
+  /* ---------- statistics ---------- */
+  .statyr { font-size: 36px; font-weight: 800; color: var(--accent); letter-spacing: .06em; line-height: 1.15; margin-top: 12px; }
+  .statnums { display: flex; gap: 0; margin: 8px 0 4px; }
+  .statnum { flex: 1; }
+  .statnum + .statnum { border-left: 1.5px dashed var(--dash); padding-left: 16px; }
+  .statnum .n { font-size: 40px; font-weight: 800; line-height: 1.1; }
+  .statnum .n .unit { font-size: 17px; color: var(--accent); font-weight: 800; margin-left: 2px; }
+  .statnum .l { font-size: calc(var(--fs) * .78); color: var(--muted); letter-spacing: .1em; font-weight: 700; }
+  .vbars { display: flex; align-items: flex-end; gap: 5px; height: 108px; margin-top: 10px; }
+  .vbar { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .vbar .vb { width: 100%; max-width: 26px; background: var(--bar); min-height: 2px; }
+  .vbar.max .vb { background: var(--accent); }
+  .vbar .vl { font-size: 10px; color: var(--muted); margin-top: 4px; font-weight: 700; }
+  .vbar .vc { font-size: 10px; font-weight: 800; margin-bottom: 3px; }
+  .hbar { display: flex; align-items: center; gap: 9px; margin-top: 7px; font-size: calc(var(--fs) * .82); }
+  .hbar .hl { width: 108px; flex: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+  .hbar .ht { position: relative; flex: 1; height: 13px; background: var(--bg2); border: 1px solid var(--line2); }
+  .hbar .hf { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bar); }
+  .hbar.max .hf { background: var(--accent); }
+  .hbar .hv { width: 40px; flex: none; text-align: right; font-weight: 800; }
+  .top3 { display: flex; align-items: flex-end; justify-content: center; gap: 12px; margin-top: 12px; }
+  .top3 .t3 { text-align: center; }
+  .top3 .t3rank { font-size: 20px; font-weight: 800; color: var(--gold); margin-top: 6px; line-height: 1.1; }
+  .top3 .t3stars { font-size: calc(var(--fs) * .8); font-weight: 700; }
+  .top3 .t3stars .st { color: var(--gold); }
+
+  /* ---------- settings (diary composition, Lynch skin) ---------- */
+  .groupcard { background: var(--card); border: 1.5px solid var(--line); border-radius: 8px; padding: 4px 18px; margin-bottom: 22px; }
   .groupcard .srow:last-child { border-bottom: none; }
   .srow {
     display: flex; align-items: center; gap: 15px; width: 100%; text-align: left;
-    padding: 16px 0; border-bottom: 1px solid var(--line); min-height: 48px; color: var(--text);
+    padding: 16px 0; border-bottom: 1.5px dashed var(--dash); min-height: 48px; color: var(--text);
   }
   .srow:last-child { border-bottom: none; }
   .srow:active { opacity: .6; }
@@ -203,47 +344,54 @@
   .srow .ic svg { width: 25px; height: 25px; }
   .srow .lb { flex: 1; font-size: calc(var(--fs) * 1.02); min-width: 0; }
   .srow .val { color: var(--muted); font-size: calc(var(--fs) * .95); }
-  .srow .chev { color: #6d6d74; font-size: 22px; line-height: 1; }
+  .srow .chev { color: var(--muted); font-size: 22px; line-height: 1; }
   .pillrow {
     display: flex; align-items: center; gap: 15px; width: 100%; text-align: left;
-    background: var(--card); border-radius: 999px; padding: 18px 22px; margin-bottom: 26px; color: var(--text);
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 8px; padding: 17px 20px; margin: 14px 0 22px; color: var(--text);
   }
   .pillrow:active { opacity: .6; }
   .pillrow .ic { flex: none; width: 26px; height: 26px; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; }
   .pillrow .ic svg { width: 25px; height: 25px; }
   .pillrow .lb { flex: 1; font-size: calc(var(--fs) * 1.02); min-width: 0; }
   .pillrow .val { color: var(--muted); font-size: calc(var(--fs) * .95); }
-  .pillrow .chev { color: #6d6d74; font-size: 22px; line-height: 1; }
+  .pillrow .chev { color: var(--muted); font-size: 22px; line-height: 1; }
   .panelnav { display: flex; align-items: center; gap: 6px; margin: 2px 0 14px; }
-  .panelnav .back { min-width: 44px; height: 44px; display: inline-flex; align-items: center; font-size: calc(var(--fs) * .95); color: var(--muted); }
-  .panelnav .pttl { flex: 1; text-align: center; font-weight: 700; font-size: calc(var(--fs) * 1.05); }
-  .setbox { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
-  .setlabel { font-size: calc(var(--fs) * .8); color: var(--muted); margin-bottom: 6px; }
-  #verBadge { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 2px); left: 50%; transform: translateX(-50%); z-index: 39; font-family: var(--uifont); font-size: 9px; letter-spacing: .03em; color: var(--muted); opacity: .8; pointer-events: none; white-space: nowrap; }
-  .syncpill { display: inline-block; font-size: calc(var(--fs) * .8); padding: 4px 12px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--line); color: var(--muted); }
-  .syncpill.ok { color: #7ee2a0; }
-  .syncpill.err { color: var(--danger); }
+  .panelnav .back { min-width: 44px; height: 44px; display: inline-flex; align-items: center; font-size: calc(var(--fs) * .95); color: var(--gold); font-weight: 700; }
+  .panelnav .pttl { flex: 1; text-align: center; font-weight: 800; font-size: calc(var(--fs) * 1.05); letter-spacing: .06em; }
+  .setbox { background: var(--card); border: 1.5px solid var(--line); border-radius: 8px; padding: 16px; }
+  .setlabel { font-size: calc(var(--fs) * .8); color: var(--muted); margin-bottom: 6px; font-weight: 700; letter-spacing: .06em; }
+  #verBadge { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 2px); left: 50%; transform: translateX(-50%); z-index: 39; font-family: var(--uifont); font-size: 9px; letter-spacing: .03em; color: rgba(237,230,214,.55); pointer-events: none; white-space: nowrap; }
+  .syncpill { display: inline-block; font-size: calc(var(--fs) * .8); padding: 4px 12px; border-radius: 3px; background: var(--bg2); border: 1.5px solid var(--line); color: var(--muted); font-weight: 700; }
+  .syncpill.ok { color: #8FC1A0; border-color: #8FC1A0; }
+  .syncpill.err { color: var(--danger); border-color: var(--danger); }
   .syncstat { font-size: calc(var(--fs) * .82); color: var(--muted); margin-top: 8px; }
   .syncstat .err { color: var(--danger); }
 
-  /* ---------- lightbox ---------- */
+  /* ---------- lightbox (velvet popup card, gold border + offset shadow) ---------- */
   #lightbox {
-    position: fixed; inset: 0; z-index: 120; background: #000;
-    display: none; flex-direction: column; align-items: center; justify-content: center;
-    padding: calc(env(safe-area-inset-top, 0px) + 56px) 18px calc(env(safe-area-inset-bottom, 0px) + 18px);
+    position: fixed; inset: 0; z-index: 120; background: rgba(5,7,15,.72);
+    display: none; align-items: center; justify-content: center;
+    padding: calc(env(safe-area-inset-top, 0px) + 20px) 18px calc(env(safe-area-inset-bottom, 0px) + 20px);
   }
   #lightbox.open { display: flex; animation: viewin .18s ease-out; }
-  #lightbox img { max-width: 100%; max-height: calc(100dvh - 190px); object-fit: contain; border-radius: 6px; }
+  .lbcard {
+    position: relative; width: 100%; max-width: 400px; max-height: 88dvh; overflow-y: auto;
+    background: var(--card); border: 1.5px solid rgba(194,155,64,.6); border-radius: 6px;
+    box-shadow: 8px 8px 0 rgba(0,0,0,.55);
+    padding: 20px 18px 18px; text-align: center;
+  }
+  #lightbox img { max-width: 78%; max-height: 52dvh; object-fit: contain; border: 1px solid var(--line); border-radius: 3px; }
   #lightbox .cap { margin-top: 14px; text-align: center; }
-  #lightbox .cap .t { font-weight: 700; font-size: calc(var(--fs) * 1.05); }
+  #lightbox .cap .t { font-weight: 800; font-size: calc(var(--fs) * 1.05); }
   #lightbox .cap .m { color: var(--muted); font-size: calc(var(--fs) * .82); margin-top: 2px; }
-  #lbprov { color: var(--muted); font-size: calc(var(--fs) * .8); margin-top: 8px; white-space: pre-line; line-height: 1.7; }
+  #lbprov { color: var(--text); font-size: calc(var(--fs) * .82); margin-top: 10px; white-space: pre-line; line-height: 1.75; border-top: 1.5px dashed var(--dash); padding-top: 10px; }
   #lbprov:empty { display: none; }
   #lbclose {
-    position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); right: 12px;
-    width: 48px; height: 48px; border-radius: 50%; background: var(--card);
-    display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text);
+    position: absolute; top: 8px; right: 8px; z-index: 2;
+    width: 44px; height: 44px; border-radius: 4px; background: var(--card); border: 1.5px solid var(--line);
+    display: flex; align-items: center; justify-content: center; font-size: 17px; color: var(--text); font-weight: 700;
   }
+</style>
 </style>
 </head>
 <body data-theme="sumi">
@@ -252,54 +400,82 @@
   <!-- ======= SPLASH ======= -->
   <div id="splash" class="wait"></div>
 
-  <!-- ======= おすすめ ======= -->
-  <section id="view-rec" class="view active">
-    <div class="topbar"><div class="spacer44"></div><div class="ttl">おすすめ<span id="syncdot"></span></div><div class="spacer44"></div></div>
+  <!-- ======= app header ======= -->
+  <header id="appbar">
+    <div class="abrow">
+      <div id="apptitle">CINELABO</div>
+      <span id="syncdot"></span>
+      <div class="abbtns">
+        <button class="hbtn" id="hb-criteria" onclick="showView('criteria')" aria-label="判定基準"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><circle cx="9" cy="7" r="2.2" style="fill:var(--card)"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="15" cy="12" r="2.2" style="fill:var(--card)"/><line x1="5" y1="17" x2="19" y2="17"/><circle cx="7.5" cy="17" r="2.2" style="fill:var(--card)"/></svg></button>
+        <button class="hbtn" id="hb-input" onclick="showView('input')" aria-label="好み入力"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 5.6a4.5 4.5 0 0 0-6.4 0L12 8 9.6 5.6a4.5 4.5 0 1 0-6.4 6.4L12 20.8l8.8-8.8a4.5 4.5 0 0 0 0-6.4z"/></svg></button>
+        <button class="hbtn" id="hb-settings" onclick="showView('settings')" aria-label="設定"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 2.83l.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      </div>
+    </div>
     <button id="syncbar" onclick="onSyncBarTap()" aria-label="同期状態"></button>
-    <main><div id="recwrap"></div></main>
+  </header>
+
+  <!-- ======= ホーム（おすすめ＋RECENT） ======= -->
+  <section id="view-home" class="view active">
+    <main><div id="homewrap"></div></main>
+  </section>
+
+  <!-- ======= カレンダー ======= -->
+  <section id="view-calendar" class="view">
+    <main><div id="calwrap"></div></main>
+  </section>
+
+  <!-- ======= 半券 ======= -->
+  <section id="view-stubs" class="view">
+    <main><div id="stubswrap"></div></main>
+  </section>
+
+  <!-- ======= 作品（ライブラリ） ======= -->
+  <section id="view-works" class="view">
+    <main><div id="librarywrap"></div></main>
+  </section>
+
+  <!-- ======= 統計 ======= -->
+  <section id="view-stats" class="view">
+    <main><div id="statswrap"></div></main>
   </section>
 
   <!-- ======= 判定基準 ======= -->
   <section id="view-criteria" class="view">
-    <div class="topbar"><div class="spacer44"></div><div class="ttl">判定基準</div><div class="spacer44"></div></div>
     <main><div id="criteriawrap"></div></main>
   </section>
 
   <!-- ======= 好み入力 ======= -->
   <section id="view-input" class="view">
-    <div class="topbar"><div class="spacer44"></div><div class="ttl">好み入力</div><div class="spacer44"></div></div>
     <main><div id="inputwrap"></div></main>
-  </section>
-
-  <!-- ======= ライブラリ ======= -->
-  <section id="view-library" class="view">
-    <div class="topbar"><div class="spacer44"></div><div class="ttl">ライブラリ</div><div class="spacer44"></div></div>
-    <main><div id="librarywrap"></div></main>
   </section>
 
   <!-- ======= 設定 ======= -->
   <section id="view-settings" class="view">
-    <div class="topbar"><div class="spacer44"></div><div class="ttl">設定</div><div class="spacer44"></div></div>
     <main><div id="settingsmain"></div><div id="settingspanel" style="display:none"></div></main>
   </section>
 
   <div id="verBadge"></div>
 
-  <nav id="pillnav">
-    <span id="navind"></span>
-    <button id="nav-rec" class="on" onclick="showView('rec')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.5 5.2 5.7.7-4.2 3.9 1.1 5.6L12 16.2l-5.1 2.7L8 13.3 3.8 9.4l5.7-.7z"/></svg><span>おすすめ</span></button>
-    <button id="nav-criteria" onclick="showView('criteria')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><circle cx="9" cy="7" r="2.2" fill="var(--bg)"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="15" cy="12" r="2.2" fill="var(--bg)"/><line x1="5" y1="17" x2="19" y2="17"/><circle cx="7.5" cy="17" r="2.2" fill="var(--bg)"/></svg><span>判定基準</span></button>
-    <button id="nav-input" onclick="showView('input')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 5.6a4.5 4.5 0 0 0-6.4 0L12 8 9.6 5.6a4.5 4.5 0 1 0-6.4 6.4L12 20.8l8.8-8.8a4.5 4.5 0 0 0 0-6.4z"/></svg><span>好み入力</span></button>
-    <button id="nav-library" onclick="showView('library')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="8.5" x2="15" y2="8.5"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="15.5" x2="12.5" y2="15.5"/></svg><span>ライブラリ</span></button>
-    <button id="nav-settings" onclick="showView('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>設定</span></button>
+  <button id="fab" onclick="showView('input')" aria-label="映画を追加"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+
+  <div id="chev" aria-hidden="true"></div>
+
+  <nav id="tabbar">
+    <button id="nav-home" class="on" onclick="showView('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.8L12 4l8 6.8"/><path d="M6.2 9.4V20h11.6V9.4"/></svg><span>ホーム</span></button>
+    <button id="nav-calendar" onclick="showView('calendar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="5.5" width="16" height="15" rx="1"/><line x1="4" y1="10.5" x2="20" y2="10.5"/><line x1="8" y1="3" x2="8" y2="7.5"/><line x1="16" y1="3" x2="16" y2="7.5"/></svg><span>カレンダー</span></button>
+    <button id="nav-stubs" onclick="showView('stubs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V7a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 20 7v2a2.6 2.6 0 0 0 0 5.2V17a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17v-2.8A2.6 2.6 0 0 0 4 9z"/><line x1="14.5" y1="7" x2="14.5" y2="17" stroke-dasharray="2.2 2.4"/></svg><span>半券</span></button>
+    <button id="nav-works" onclick="showView('works')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg><span>作品</span></button>
+    <button id="nav-stats" onclick="showView('stats')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="20"/><line x1="7" y1="20" x2="7" y2="12"/><line x1="12" y1="20" x2="12" y2="5.5"/><line x1="17" y1="20" x2="17" y2="9"/></svg><span>統計</span></button>
   </nav>
 
   <input type="file" id="importfile" accept=".json,application/json" style="display:none" onchange="importDataFile(this)">
 
   <div id="lightbox" onclick="if(event.target===this) closeLightbox()">
-    <button id="lbclose" onclick="closeLightbox()" aria-label="閉じる">✕</button>
-    <img id="lbimg" alt="ポスター拡大" onclick="closeLightbox()">
-    <div class="cap"><div class="t" id="lbtitle"></div><div class="m" id="lbmeta"></div><div id="lbprov"></div></div>
+    <div class="lbcard">
+      <button id="lbclose" onclick="closeLightbox()" aria-label="閉じる">✕</button>
+      <img id="lbimg" alt="ポスター拡大" onclick="closeLightbox()">
+      <div class="cap"><div class="t" id="lbtitle"></div><div class="m" id="lbmeta"></div><div id="lbprov"></div></div>
+    </div>
   </div>
 
 <script>
@@ -588,7 +764,37 @@ function addCatalogFilm(key, status, rating){
   touch(); renderAll();
 }
 
-/* ================= view: おすすめ ================= */
+/* ================= view: ホーム（おすすめ＋RECENT） ================= */
+function starsHTML(r){
+  if(typeof r!=='number') return '<span class="norating">未評価</span>';
+  const full=Math.max(1, Math.round(r));
+  return '<span class="st">'+'★'.repeat(full)+'</span><span class="stnum">'+fmt1(r)+'</span>';
+}
+function fmtDateShort(dstr){
+  if(!dstr) return '—';
+  const p=dstr.split('-');
+  if(p.length!==3) return dstr;
+  return parseInt(p[1],10)+'/'+parseInt(p[2],10);
+}
+function watchedSorted(){
+  const idx={};
+  DB.films.forEach((f,i)=>{ idx[f.id]=i; });
+  return DB.films.filter(f=>f.status==='watched').sort((a,b)=>{
+    const da=a.watchedDate||'', db=b.watchedDate||'';
+    if(da!==db) return da<db ? 1 : -1; /* newest first, undated last */
+    return idx[b.id]-idx[a.id]; /* later-added first within the same day */
+  });
+}
+function recentRowHTML(f){
+  const ptid=tmdbIdForFilm(f);
+  let h='<div class="recent">'+posterWithMeta(posterFor(f), f.title, metaLine(f), 48, ptid)+
+    '<div class="rmain"><div class="ftitle" style="font-size:15px">'+esc(f.title)+'</div>'+
+    '<div class="stars">'+starsHTML(f.rating)+'</div></div>'+
+    '<div class="rside"><div class="rdate">'+fmtDateShort(f.watchedDate)+'</div>';
+  if(ptid && getTmdbToken()) h+='<div class="provtop" data-tmdb="'+ptid+'"></div>';
+  h+='</div></div>';
+  return h;
+}
 function recCardHTML(pick, isTop, rank){
   const f=pick.film;
   let h='<div class="card">';
@@ -608,12 +814,32 @@ function recCardHTML(pick, isTop, rank){
   h+='</div></div></div>';
   return h;
 }
-function renderRec(){
-  const wrap=$('recwrap'); if(!wrap) return;
-  if(renderedRev.rec===dataRev) return;
-  renderedRev.rec=dataRev;
+function renderHome(){
+  const wrap=$('homewrap'); if(!wrap) return;
+  if(renderedRev.home===dataRev) return;
+  renderedRev.home=dataRev;
+  const watched=DB.films.filter(f=>f.status==='watched');
+  const want=DB.films.filter(f=>f.status==='want');
+  const now=new Date(), Y=now.getFullYear(), ym=Y+'-'+pad2(now.getMonth()+1);
+  const dated=watched.filter(f=>f.watchedDate);
+  const thisYear=dated.filter(f=>f.watchedDate.indexOf(Y+'-')===0).length;
+  const thisMonth=dated.filter(f=>f.watchedDate.indexOf(ym)===0).length;
+  let n1, l1, n2, l2;
+  if(dated.length){ n1=thisYear; l1='今年の鑑賞'; n2=thisMonth; l2='今月の鑑賞'; }
+  else { n1=watched.length; l1='観た映画（通算）'; n2=want.length; l2='観たい映画'; }
+  let h='<div class="hero"><span class="mc1"></span><span class="mc2"></span>'+
+    '<div class="hkick caps">CINELABO '+Y+'</div>'+
+    '<div class="bignums">'+
+    '<div class="bignum"><div class="bn">'+n1+'<span class="unit">本</span></div><div class="bl">'+l1+'</div></div>'+
+    '<div class="bignum"><div class="bn">'+n2+'<span class="unit">本</span></div><div class="bl">'+l2+'</div></div>'+
+    '</div></div>';
+  /* RECENT */
+  h+='<div class="secttl caps">RECENT<span class="jp">最近観た</span></div>';
+  const rec=watchedSorted().slice(0,5);
+  h+= rec.length ? rec.map(recentRowHTML).join('') : '<div class="empty">まだ記録がありません</div>';
+  /* おすすめ */
+  h+='<div class="secttl caps">RECOMMEND<span class="jp">おすすめ</span></div>';
   const r=computeRecommendations();
-  let h='';
   if(r.profileSource==='criteria-only'){
     h+='<div class="note">まだ好みプロフィールがありません（★4以上で評価した映画が種になります）。今は判定基準だけで選んでいます。「好み入力」で好きな映画を★4以上で登録すると、判定基準と半々で混ぜておすすめします。</div>';
   } else {
@@ -624,9 +850,198 @@ function renderRec(){
   } else {
     h+=recCardHTML(r.picks[0], true, 1);
     if(r.picks.length>1){
-      h+='<div class="secttl">候補</div>';
+      h+='<div class="secttl caps">NEXT<span class="jp">候補</span></div>';
       r.picks.slice(1,12).forEach((p,i)=>{ h+=recCardHTML(p, false, i+2); });
     }
+  }
+  wrap.innerHTML=h;
+  scanProviders();
+}
+
+/* ================= view: カレンダー ================= */
+let calY=null, calM=null;
+function renderCalendar(){
+  const wrap=$('calwrap'); if(!wrap) return;
+  const now=new Date();
+  if(calY===null){ calY=now.getFullYear(); calM=now.getMonth(); }
+  const ckey=calY+'-'+calM;
+  if(renderedRev.calendar===dataRev && renderedRev.calKey===ckey) return;
+  renderedRev.calendar=dataRev; renderedRev.calKey=ckey;
+  const byDay={};
+  let undated=0;
+  DB.films.filter(f=>f.status==='watched').forEach(f=>{
+    if(f.watchedDate){ (byDay[f.watchedDate]=byDay[f.watchedDate]||[]).push(f); }
+    else undated++;
+  });
+  const startDay=new Date(calY, calM, 1).getDay();
+  const days=new Date(calY, calM+1, 0).getDate();
+  const monthPrefix=calY+'-'+pad2(calM+1);
+  let monthCount=0;
+  Object.keys(byDay).forEach(k=>{ if(k.indexOf(monthPrefix)===0) monthCount+=byDay[k].length; });
+  const todayStr=now.getFullYear()+'-'+pad2(now.getMonth()+1)+'-'+pad2(now.getDate());
+  let h='<div class="calhead"><button class="calnav" onclick="calMove(-1)" aria-label="前の月">‹</button>'+
+    '<div class="cm">'+calY+'年'+(calM+1)+'月</div>'+
+    '<button class="calnav" onclick="calMove(1)" aria-label="次の月">›</button>'+
+    '<span class="calcount">'+monthCount+' 本</span></div>';
+  h+='<div class="calgrid">';
+  ['日','月','火','水','木','金','土'].forEach((w,i)=>{ h+='<div class="calwd'+(i===0?' sun':'')+'">'+w+'</div>'; });
+  for(let i=0;i<startDay;i++) h+='<div class="calcell"></div>';
+  for(let d=1; d<=days; d++){
+    const ds=calY+'-'+pad2(calM+1)+'-'+pad2(d);
+    const films=byDay[ds]||[];
+    const f=films[0];
+    h+='<div class="calcell'+(films.length?' hasfilm':'')+(ds===todayStr?' today':'')+'">';
+    if(f){
+      const p=posterFor(f), ptid=tmdbIdForFilm(f);
+      h+='<button type="button" class="calposter" data-poster="'+escA(p||'')+'" data-title="'+escA(f.title||'')+'" data-meta="'+escA(metaLine(f))+'"'+(ptid?' data-tmdb="'+ptid+'"':'')+' onclick="posterTap(this)" aria-label="'+escA(f.title)+'">'+(p?'<img src="'+escA(p)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'</button>';
+      if(films.length>1) h+='<span class="calmore">+'+(films.length-1)+'</span>';
+    }
+    h+='<span class="cald">'+d+'</span></div>';
+  }
+  h+='</div>';
+  if(undated) h+='<div class="note" style="margin-top:10px">日付未設定の観た映画が'+undated+'本あります（作品タブで鑑賞日を設定するとカレンダーに出ます）。</div>';
+  wrap.innerHTML=h;
+}
+function calMove(d){
+  calM+=d;
+  if(calM<0){ calM=11; calY--; }
+  if(calM>11){ calM=0; calY++; }
+  delete renderedRev.calendar;
+  renderCalendar();
+}
+
+/* ================= view: 半券 ================= */
+function stubHTML(f){
+  const p=posterFor(f), ptid=tmdbIdForFilm(f);
+  let inner='<span class="pfb">'+esc(f.title||'')+'</span>';
+  if(p) inner+='<img src="'+escA(p)+'" alt="" loading="lazy" onerror="this.remove()">';
+  if(typeof f.rating==='number') inner+='<span class="ribbon"><span class="rst">★</span>'+fmt1(f.rating)+'</span>';
+  inner+='<span class="datestrip'+(f.watchedDate?'':' none')+'">'+(f.watchedDate ? fmtDateShort(f.watchedDate) : '日付なし')+'</span>';
+  return '<button type="button" class="poster stubp" data-poster="'+escA(p||'')+'" data-title="'+escA(f.title||'')+'" data-meta="'+escA(metaLine(f))+'"'+(ptid?' data-tmdb="'+ptid+'"':'')+' onclick="posterTap(this)" aria-label="'+escA(f.title||'')+'">'+inner+'</button>';
+}
+function renderStubs(){
+  const wrap=$('stubswrap'); if(!wrap) return;
+  if(renderedRev.stubs===dataRev) return;
+  renderedRev.stubs=dataRev;
+  const list=watchedSorted();
+  let h='<div class="secttl caps" style="margin-top:14px">STUBS<span class="jp">半券 — 観た映画 '+list.length+' 本</span></div>';
+  h+= list.length ? '<div class="stubgrid">'+list.map(stubHTML).join('')+'</div>'
+                  : '<div class="empty">まだ半券がありません。観た映画を登録するとここに並びます。</div>';
+  wrap.innerHTML=h;
+}
+
+/* ================= view: 統計 ================= */
+let statsMode='months';
+function setStatsMode(m){ statsMode=m; delete renderedRev.stats; renderStats(); }
+function hbarHTML(label, val, max, suffix){
+  const pct=max>0 ? Math.round(val/max*100) : 0;
+  return '<div class="hbar'+(max>0 && val===max && val>0 ? ' max':'')+'"><span class="hl">'+esc(label)+'</span><span class="ht"><span class="hf" style="width:'+pct+'%"></span></span><span class="hv">'+val+(suffix||'')+'</span></div>';
+}
+function renderStats(){
+  const wrap=$('statswrap'); if(!wrap) return;
+  if(renderedRev.stats===dataRev && renderedRev.statsMode===statsMode) return;
+  renderedRev.stats=dataRev; renderedRev.statsMode=statsMode;
+  const watched=DB.films.filter(f=>f.status==='watched');
+  const Y=new Date().getFullYear();
+  let h='<div class="statyr">'+Y+'</div><div class="caps" style="font-size:calc(var(--fs) * .82)">STATISTICS</div>';
+  h+='<div class="segrow"><button class="seg'+(statsMode==='months'?' on':'')+'" onclick="setStatsMode(\'months\')">月ごと</button>'+
+     '<button class="seg'+(statsMode==='years'?' on':'')+'" onclick="setStatsMode(\'years\')">年ごと</button></div>';
+  /* headline numbers (whole library, always meaningful) */
+  let rtSum=0, rtCount=0;
+  watched.forEach(f=>{ const rt=runtimeFor(f); if(typeof rt==='number'){ rtSum+=rt; rtCount++; } });
+  const rtH=Math.floor(rtSum/60), rtM=rtSum%60;
+  h+='<div class="statnums">'+
+    '<div class="statnum"><div class="n">'+watched.length+'<span class="unit">本</span></div><div class="l">記録本数</div></div>'+
+    '<div class="statnum"><div class="n">'+(rtCount ? rtH+'<span class="unit">時間</span>'+(rtM? rtM+'<span class="unit">分</span>':'') : '—')+'</div><div class="l">総鑑賞時間'+(rtCount?'（'+rtCount+'本分）':'')+'</div></div>'+
+    '</div>';
+  /* period bars */
+  const dated=watched.filter(f=>f.watchedDate);
+  if(statsMode==='months'){
+    h+='<div class="secttl caps">MONTHLY<span class="jp">'+Y+'年の月別本数</span></div>';
+    if(dated.length){
+      const counts=[];
+      let mx=0;
+      for(let m=0;m<12;m++){
+        const c=dated.filter(f=>f.watchedDate.indexOf(Y+'-'+pad2(m+1))===0).length;
+        counts.push(c); if(c>mx) mx=c;
+      }
+      h+='<div class="vbars">';
+      counts.forEach((c,m)=>{
+        h+='<div class="vbar'+(mx>0 && c===mx && c>0 ? ' max':'')+'">'+(c? '<span class="vc">'+c+'</span>' : '')+'<span class="vb" style="height:'+(mx>0 ? Math.max(4, Math.round(c/mx*64)) : 2)+'px"></span><span class="vl">'+(m+1)+'</span></div>';
+      });
+      h+='</div>';
+    } else {
+      h+='<div class="note">鑑賞日が設定された映画がまだありません（作品タブで鑑賞日を入れると集計されます）。</div>';
+    }
+  } else {
+    h+='<div class="secttl caps">YEARLY<span class="jp">年別本数</span></div>';
+    if(dated.length){
+      const byYear={};
+      dated.forEach(f=>{ const y=f.watchedDate.slice(0,4); byYear[y]=(byYear[y]||0)+1; });
+      const ys=Object.keys(byYear).sort().reverse();
+      const mx=Math.max.apply(null, ys.map(y=>byYear[y]));
+      ys.forEach(y=>{ h+=hbarHTML(y+'年', byYear[y], mx, ' 本'); });
+    } else {
+      h+='<div class="note">鑑賞日が設定された映画がまだありません。</div>';
+    }
+  }
+  /* star distribution */
+  const rated=watched.filter(f=>typeof f.rating==='number');
+  h+='<div class="secttl caps">RATINGS<span class="jp">星の分布</span></div>';
+  if(rated.length){
+    const buckets=[5,4.5,4,3.5,3,2.5,2,1.5,1,0.5].map(v=>({ v:v, c:rated.filter(f=>f.rating===v).length })).filter(b=>b.c>0);
+    const mx=Math.max.apply(null, buckets.map(b=>b.c));
+    buckets.forEach(b=>{ h+=hbarHTML('★'+fmt1(b.v), b.c, mx, ' 本'); });
+  } else {
+    h+='<div class="note">評価が付いた映画がまだありません。</div>';
+  }
+  /* providers (from the TMDb providers cache only) */
+  h+='<div class="secttl caps">SERVICES<span class="jp">配信サービス別（取得済みの情報から）</span></div>';
+  const cache=provLoad();
+  const svc={};
+  watched.forEach(f=>{
+    const id=tmdbIdForFilm(f); if(!id) return;
+    const e=cache['p'+id];
+    if(e && e.flatrate) e.flatrate.forEach(n=>{ svc[n]=(svc[n]||0)+1; });
+  });
+  const svcKeys=Object.keys(svc).sort((a,b)=>svc[b]-svc[a]).slice(0,8);
+  if(svcKeys.length){
+    const mx=Math.max.apply(null, svcKeys.map(k=>svc[k]));
+    svcKeys.forEach(k=>{ h+=hbarHTML(k, svc[k], mx, ' 本'); });
+  } else {
+    h+='<div class="note">まだ集計できる配信情報がありません。作品の配信表示が取得されると、ここに集計されます。</div>';
+  }
+  /* genres / directors */
+  const genres={}, dirs={};
+  watched.forEach(f=>{
+    if(f.catalogKey && CATALOG_BY_KEY[f.catalogKey]) (CATALOG_BY_KEY[f.catalogKey].genres||[]).forEach(g=>{ genres[g]=(genres[g]||0)+1; });
+    if(f.director) dirs[f.director]=(dirs[f.director]||0)+1;
+  });
+  const gk=Object.keys(genres).sort((a,b)=>genres[b]-genres[a]).slice(0,12);
+  if(gk.length){
+    h+='<div class="secttl caps">GENRES<span class="jp">よく観るジャンル</span></div><div class="chips">'+
+      gk.map(g=>'<span class="chip" style="min-height:44px">'+esc(g)+' '+genres[g]+'</span>').join('')+'</div>';
+  }
+  const dk=Object.keys(dirs).sort((a,b)=>dirs[b]-dirs[a]).slice(0,12);
+  if(dk.length){
+    h+='<div class="secttl caps">DIRECTORS<span class="jp">よく観る監督</span></div><div class="chips">'+
+      dk.map(d=>'<span class="chip" style="min-height:44px">'+esc(d)+' '+dirs[d]+'</span>').join('')+'</div>';
+  }
+  /* top 3 */
+  const top=rated.slice().sort((a,b)=>b.rating-a.rating).slice(0,3);
+  if(top.length){
+    h+='<div class="secttl caps">TOP 3<span class="jp">高評価</span></div><div class="top3">';
+    const order = top.length===3 ? [top[1], top[0], top[2]] : top;
+    order.forEach(f=>{
+      const rank=top.indexOf(f)+1;
+      h+='<div class="t3">'+posterWithMeta(posterFor(f), f.title, metaLine(f), rank===1?92:72, tmdbIdForFilm(f))+
+        '<div class="t3rank">'+rank+'</div><div class="t3stars"><span class="st">★</span>'+fmt1(f.rating)+'</div></div>';
+    });
+    h+='</div>';
+  }
+  /* hidden provider lines so the cache warms for the services section */
+  if(getTmdbToken()){
+    watched.forEach(f=>{ const id=tmdbIdForFilm(f); if(id) h+='<span class="provline" data-tmdb="'+id+'" style="display:none"></span>'; });
   }
   wrap.innerHTML=h;
   scanProviders();
@@ -904,6 +1319,12 @@ async function resolveProvId(title, origTitle, year){
 }
 function scanProviders(){
   if(!getTmdbToken()) return;
+  document.querySelectorAll('.provtop[data-tmdb]:not([data-done])').forEach(el=>{
+    el.setAttribute('data-done','1');
+    const id=parseInt(el.getAttribute('data-tmdb'),10);
+    if(!id) return;
+    fetchProviders(id).then(e=>{ if(e) el.textContent=(e.flatrate && e.flatrate.length) ? e.flatrate[0] : ''; });
+  });
   document.querySelectorAll('.provline[data-tmdb]:not([data-done])').forEach(el=>{
     el.setAttribute('data-done','1');
     const id=parseInt(el.getAttribute('data-tmdb'),10);
@@ -931,7 +1352,9 @@ function provLineHTML(tmdbId, film){
   return '';
 }
 
-/* ================= view: ライブラリ ================= */
+/* ================= view: 作品（ライブラリ） ================= */
+let worksFilter='all';
+function setWorksFilter(f){ worksFilter=f; delete renderedRev.library; renderLibrary(); }
 function libRowHTML(f){
   const poster=posterFor(f);
   const ptid=tmdbIdForFilm(f);
@@ -951,14 +1374,24 @@ function libRowHTML(f){
 }
 function renderLibrary(){
   const wrap=$('librarywrap'); if(!wrap) return;
-  if(renderedRev.library===dataRev) return;
-  renderedRev.library=dataRev;
+  if(renderedRev.library===dataRev && renderedRev.worksFilter===worksFilter) return;
+  renderedRev.library=dataRev; renderedRev.worksFilter=worksFilter;
   const watched=DB.films.filter(f=>f.status==='watched');
   const want=DB.films.filter(f=>f.status==='want');
-  let h='<div class="secttl">観た映画（'+watched.length+'）</div>';
-  h+= watched.length ? watched.map(libRowHTML).join('') : '<div class="empty">まだありません</div>';
-  h+='<div class="secttl">観たい映画（'+want.length+'）</div>';
-  h+= want.length ? want.map(libRowHTML).join('') : '<div class="empty">まだありません</div>';
+  let h='<div class="secttl caps" style="margin-top:14px">WORKS<span class="jp">作品ライブラリ</span></div>';
+  h+='<div class="segrow">'+
+    '<button class="seg'+(worksFilter==='all'?' on':'')+'" onclick="setWorksFilter(\'all\')">すべて '+DB.films.length+'</button>'+
+    '<button class="seg'+(worksFilter==='want'?' on':'')+'" onclick="setWorksFilter(\'want\')">観たい '+want.length+'</button>'+
+    '<button class="seg'+(worksFilter==='watched'?' on':'')+'" onclick="setWorksFilter(\'watched\')">観た '+watched.length+'</button>'+
+    '</div>';
+  if(worksFilter!=='want'){
+    h+='<div class="secttl caps">WATCHED<span class="jp">観た映画（'+watched.length+'）</span></div>';
+    h+= watched.length ? watched.map(libRowHTML).join('') : '<div class="empty">まだありません</div>';
+  }
+  if(worksFilter!=='watched'){
+    h+='<div class="secttl caps">WANT<span class="jp">観たい映画（'+want.length+'）</span></div>';
+    h+= want.length ? want.map(libRowHTML).join('') : '<div class="empty">まだありません</div>';
+  }
   wrap.innerHTML=h;
   scanProviders();
 }
@@ -1085,63 +1518,82 @@ function importDataFile(input){
 }
 
 /* ================= navigation ================= */
-const VIEW_ORDER=['rec','criteria','input','library','settings'];
-let currentView='rec';
+const NAV_VIEWS=['home','calendar','stubs','works','stats'];
+const ALL_VIEWS=['home','calendar','stubs','works','stats','criteria','input','settings'];
+let currentView='home';
+function viewTitleHTML(name){
+  const Y=new Date().getFullYear();
+  switch(name){
+    case 'home': return 'CINELABO<span class="ayr">'+Y+'</span>';
+    case 'calendar': return 'CALENDAR<span class="ajp">カレンダー</span>';
+    case 'stubs': return 'STUBS<span class="ajp">半券</span>';
+    case 'works': return 'WORKS<span class="ajp">作品</span>';
+    case 'stats': return 'STATISTICS<span class="ajp">統計</span>';
+    case 'criteria': return 'CRITERIA<span class="ajp">判定基準</span>';
+    case 'input': return 'TASTE<span class="ajp">好み入力</span>';
+    case 'settings': return 'SETTINGS<span class="ajp">設定</span>';
+  }
+  return 'CINELABO';
+}
 function showView(name){
   const prev=currentView;
   currentView=name;
-  VIEW_ORDER.forEach(v=>{
+  ALL_VIEWS.forEach(v=>{
     const el=$('view-'+v); if(!el) return;
     const on=(v===name);
     el.classList.toggle('active', on);
     el.classList.remove('slide-fwd','slide-back','fadein');
     if(on && prev!==name){
-      const dir=VIEW_ORDER.indexOf(name)-VIEW_ORDER.indexOf(prev);
-      el.classList.add(dir>0?'slide-fwd':(dir<0?'slide-back':'fadein'));
+      const di=ALL_VIEWS.indexOf(name), pi=ALL_VIEWS.indexOf(prev);
+      el.classList.add(di>pi?'slide-fwd':(di<pi?'slide-back':'fadein'));
     }
     const nav=$('nav-'+v); if(nav) nav.classList.toggle('on', on);
   });
+  ['criteria','input','settings'].forEach(v=>{
+    const hb=$('hb-'+v); if(hb) hb.classList.toggle('on', v===name);
+  });
+  const tt=$('apptitle'); if(tt) tt.innerHTML=viewTitleHTML(name);
+  const fab=$('fab');
+  if(fab) fab.style.display = NAV_VIEWS.indexOf(name)>=0 ? '' : 'none';
   try{ window.scrollTo(0,0); }catch(e){}
-  if(name==='rec') renderRec();
-  if(name==='library') renderLibrary();
+  if(name==='home') renderHome();
+  if(name==='calendar') renderCalendar();
+  if(name==='stubs') renderStubs();
+  if(name==='works') renderLibrary();
+  if(name==='stats') renderStats();
   if(name==='settings') renderSettings();
-  moveNavInd(true);
+  pinNav();
 }
 function renderAll(){
   for(const k in renderedRev) delete renderedRev[k];
-  renderRec(); renderCriteria(); renderInput(); renderLibrary(); renderSettings();
+  renderHome(); renderCalendar(); renderStubs(); renderLibrary(); renderStats();
+  renderCriteria(); renderInput(); renderSettings();
 }
 
-/* ================= pill nav indicator + pinning (diary pattern) ================= */
-let lastNavX=null;
-function moveNavInd(animate){
-  const ind=$('navind'); if(!ind) return;
-  const b=document.querySelector('#pillnav button.on') || $('nav-'+currentView);
-  if(!b) return;
-  const x=b.offsetLeft, w=b.offsetWidth;
-  if(!w) return;
-  ind.style.width=w+'px';
-  ind.style.left=x+'px';
-  lastNavX=x;
-  if(!animate){ ind.style.transition='none'; requestAnimationFrame(()=>{ ind.style.transition=''; }); }
-}
+/* ================= tab bar pinning (diary pattern, adapted to the full-width bar) ================= */
 function pinNav(){
   /* iOS standalone shrinks the fixed-position frame when the page is not
      scrollable, floating the bar up. Measure the real gap to the screen
-     bottom and compensate so the bar always sits 15px above it. */
-  const nav=$('pillnav'); if(!nav || nav.style.display==='none') return;
-  nav.style.bottom='15px';
+     bottom and push the bar down so it always sits flush at the bottom. */
+  const nav=$('tabbar'); if(!nav || nav.style.display==='none') return;
+  nav.style.bottom='0px';
   const gap=window.innerHeight - nav.getBoundingClientRect().bottom;
-  if(Math.abs(gap-15)>2) nav.style.bottom=(30-gap)+'px';
+  if(Math.abs(gap)>2) nav.style.bottom=(-gap)+'px';
+  const ch=$('chev');
+  if(ch){
+    ch.style.bottom='';
+    const nb=nav.getBoundingClientRect();
+    ch.style.bottom=(window.innerHeight - nb.top)+'px';
+  }
 }
 function healNav(){
-  const nav=$('pillnav'); if(!nav || nav.style.display==='none') return;
+  const nav=$('tabbar'); if(!nav || nav.style.display==='none') return;
   pinNav();
   nav.style.opacity='0.99';
   requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ nav.style.opacity=''; }); });
 }
 let navHealTimer=null;
-window.addEventListener('resize', ()=>{ moveNavInd(false); pinNav(); });
+window.addEventListener('resize', ()=>{ pinNav(); });
 window.addEventListener('scroll', ()=>{ if(navHealTimer) clearTimeout(navHealTimer); navHealTimer=setTimeout(healNav, 160); }, { passive:true });
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) setTimeout(healNav, 60); });
 
@@ -1270,7 +1722,7 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='1.13';
+const APP_VERSION='2.0';
 { const vb=$('verBadge'); if(vb) vb.textContent='v'+APP_VERSION; }
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
@@ -1314,7 +1766,7 @@ document.addEventListener('touchstart', function(){}, { passive:true });
     setTimeout(()=>{ try{ sp.remove(); }catch(e){} }, 2800);
   }
   renderAll();
-  requestAnimationFrame(()=>{ moveNavInd(false); pinNav(); });
+  requestAnimationFrame(()=>{ pinNav(); });
   renderSyncStatus();
   if(relayReady()){
     /* a configured relay needs no login — sync on open. */
