@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="1.11">
+<meta name="app-version" content="1.12">
 <title>映画</title>
 <meta name="application-name" content="映画">
 <meta name="apple-mobile-web-app-title" content="映画">
@@ -217,7 +217,7 @@
   .panelnav .pttl { flex: 1; text-align: center; font-weight: 700; font-size: calc(var(--fs) * 1.05); }
   .setbox { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
   .setlabel { font-size: calc(var(--fs) * .8); color: var(--muted); margin-bottom: 6px; }
-  #verBadge { position: fixed; right: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 4px); z-index: 35; font-size: 10px; letter-spacing: .05em; color: var(--muted); opacity: .75; pointer-events: none; font-family: var(--uifont); }
+  #verBadge { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 2px); left: 50%; transform: translateX(-50%); z-index: 39; font-family: var(--uifont); font-size: 9px; letter-spacing: .03em; color: var(--muted); opacity: .8; pointer-events: none; white-space: nowrap; }
   .syncpill { display: inline-block; font-size: calc(var(--fs) * .8); padding: 4px 12px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--line); color: var(--muted); }
   .syncpill.ok { color: #7ee2a0; }
   .syncpill.err { color: var(--danger); }
@@ -1268,7 +1268,7 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='1.11';
+const APP_VERSION='1.12';
 { const vb=$('verBadge'); if(vb) vb.textContent='v'+APP_VERSION; }
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
