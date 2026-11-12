@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="2.0">
+<meta name="app-version" content="2.1">
 <title>Cinelabo</title>
 <link rel="icon" type="image/png" href="IMG_2555.png">
 <link rel="apple-touch-icon" href="IMG_2555.png">
@@ -360,7 +360,7 @@
   .panelnav .pttl { flex: 1; text-align: center; font-weight: 800; font-size: calc(var(--fs) * 1.05); letter-spacing: .06em; }
   .setbox { background: var(--card); border: 1.5px solid var(--line); border-radius: 8px; padding: 16px; }
   .setlabel { font-size: calc(var(--fs) * .8); color: var(--muted); margin-bottom: 6px; font-weight: 700; letter-spacing: .06em; }
-  #verBadge { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 2px); left: 50%; transform: translateX(-50%); z-index: 39; font-family: var(--uifont); font-size: 9px; letter-spacing: .03em; color: rgba(237,230,214,.55); pointer-events: none; white-space: nowrap; }
+  #verBadge { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 2px); left: 50%; transform: translateX(-50%); z-index: 39; font-family: var(--uifont); font-size: 11px; letter-spacing: .03em; color: rgba(237,230,214,.85); pointer-events: none; white-space: nowrap; }
   .syncpill { display: inline-block; font-size: calc(var(--fs) * .8); padding: 4px 12px; border-radius: 3px; background: var(--bg2); border: 1.5px solid var(--line); color: var(--muted); font-weight: 700; }
   .syncpill.ok { color: #8FC1A0; border-color: #8FC1A0; }
   .syncpill.err { color: var(--danger); border-color: var(--danger); }
@@ -1722,7 +1722,7 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='2.0';
+const APP_VERSION='2.1';
 { const vb=$('verBadge'); if(vb) vb.textContent='v'+APP_VERSION; }
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
