@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="1.6">
+<meta name="app-version" content="1.7">
 <title>映画</title>
 <meta name="application-name" content="映画">
 <meta name="apple-mobile-web-app-title" content="映画">
@@ -14,7 +14,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; padding: 0; }
+  html, body { margin: 0; padding: 0; touch-action: manipulation; }
   body {
     --fs: 16px;
     --uifont: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", sans-serif;
@@ -1060,7 +1060,7 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='1.6';
+const APP_VERSION='1.7';
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
   sp.classList.remove('wait'); sp.classList.add('hide');
