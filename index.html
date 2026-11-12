@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="1.8">
+<meta name="app-version" content="1.9">
 <title>映画</title>
 <meta name="application-name" content="映画">
 <meta name="apple-mobile-web-app-title" content="映画">
@@ -14,6 +14,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { background: #000000; }
   html, body { margin: 0; padding: 0; touch-action: manipulation; }
   body {
     --fs: 16px;
@@ -41,8 +42,10 @@
   .topbar .ttl { flex: 1; text-align: center; font-size: calc(var(--fs) * 1.12); letter-spacing: .08em; font-weight: 700; }
   .spacer44 { width: 44px; flex: none; }
 
-  #syncbar { text-align: center; font-size: calc(var(--fs) * .72); color: var(--muted); padding: 0 16px 6px; min-height: 1.2em; }
+  #syncbar { display: block; width: 100%; background: none; border: none; text-align: center; font-size: calc(var(--fs) * .8); color: var(--muted); padding: 1px 16px 7px; min-height: 1.2em; letter-spacing: .03em; font-family: inherit; cursor: pointer; }
   #syncbar .err { color: var(--danger); }
+  .sbhint { color: var(--accent); }
+  #syncdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 7px; background: #e5484d; vertical-align: 2px; }
 
   main { max-width: 720px; margin: 0 auto; padding: 0 14px; }
   .view { display: none; min-height: calc(100dvh + 2px); }
@@ -64,54 +67,64 @@
 
   /* ---------- pill nav ---------- */
   #pillnav {
-    position: fixed; left: 50%; transform: translateX(-50%);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
-    z-index: 60; display: flex; align-items: stretch; gap: 2px;
+    position: fixed; left: 0; right: 0; margin-left: auto; margin-right: auto;
+    bottom: 15px; z-index: 60;
+    width: calc(100vw - 92px); max-width: 430px; height: 56px;
+    display: flex; gap: 0; padding: 5px; box-sizing: border-box;
     background: var(--nav); border: 1px solid var(--line); border-radius: 999px;
-    padding: 5px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-    max-width: calc(100vw - 16px);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
   }
   #pillnav button {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-    min-width: 60px; min-height: 48px; padding: 6px 8px; border-radius: 999px;
-    font-size: 10.5px; color: var(--muted); line-height: 1.25; white-space: nowrap;
+    position: relative; z-index: 1; flex: 1; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    padding: 0; border-radius: 999px;
+    font-size: 10px; font-weight: 500; color: var(--muted); line-height: 1.25; white-space: nowrap;
+    transition: color .3s;
   }
   #pillnav button svg { width: 21px; height: 21px; }
-  #pillnav button.on { background: var(--card2); color: var(--text); font-weight: 700; }
+  #pillnav button.on { color: var(--text); font-weight: 600; }
+  #navind {
+    position: absolute; top: 5px; bottom: 5px; left: 0; width: 0; border-radius: 999px; pointer-events: none;
+    background: var(--card2);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--text) 21%, transparent), color-mix(in srgb, var(--text) 8%, transparent) 58%, color-mix(in srgb, var(--text) 13%, transparent));
+    border: 1px solid color-mix(in srgb, var(--text) 16%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25), inset 0 -6px 10px rgba(255,255,255,.05), 0 2px 10px rgba(0,0,0,.20);
+    transition: left .45s cubic-bezier(.25,1,.3,1), width .45s cubic-bezier(.25,1,.3,1);
+  }
 
   /* ---------- generic ---------- */
-  .secttl { font-size: calc(var(--fs) * 1.05); font-weight: 700; margin: 18px 2px 10px; }
-  .secttl:first-child { margin-top: 6px; }
-  .note { font-size: calc(var(--fs) * .82); color: var(--muted); margin: 8px 2px; }
-  .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .secttl { font-size: calc(var(--fs) * 1.0); font-weight: 700; margin: 16px 2px 8px; }
+  .secttl:first-child { margin-top: 2px; }
+  .note { font-size: calc(var(--fs) * .82); color: var(--muted); margin: 6px 2px; }
+  .card { background: var(--card); border-radius: 14px; padding: 12px; margin-bottom: 10px; }
   .btn {
     display: inline-flex; align-items: center; justify-content: center;
-    min-height: 48px; padding: 10px 16px; border-radius: 12px;
-    background: var(--card2); color: var(--text); font-size: calc(var(--fs) * .92);
+    min-height: 48px; padding: 11px 20px; border-radius: 999px;
+    background: var(--card2); color: var(--text); font-size: calc(var(--fs) * .9);
     border: 1px solid var(--line);
   }
   .btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
   .btn.danger { color: var(--danger); }
-  .btn.small { min-height: 44px; padding: 8px 12px; font-size: calc(var(--fs) * .85); }
-  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .btn.small { min-height: 44px; padding: 8px 14px; font-size: calc(var(--fs) * .85); }
+  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
   .textin, .selin {
-    width: 100%; background: var(--bg2); border: 1px solid var(--line); border-radius: 12px;
-    padding: 12px; font-size: 16px; color: var(--text);
+    width: 100%; background: var(--bg2); border: 1px solid var(--line); border-radius: 10px;
+    padding: 11px 12px; font-size: 16px; color: var(--text);
   }
   .selin { width: auto; }
   select.textin, select.selin { appearance: auto; }
   .chips { display: flex; gap: 8px; flex-wrap: wrap; }
   .chip {
-    min-height: 44px; padding: 9px 14px; border-radius: 999px;
+    min-height: 48px; padding: 7px 13px; border-radius: 999px;
     background: var(--card); border: 1px solid var(--line); color: var(--muted);
-    font-size: calc(var(--fs) * .88);
+    font-size: calc(var(--fs) * .8);
   }
   .chip.on { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
   .reasonchip {
-    display: inline-block; padding: 4px 10px; border-radius: 999px; margin: 0 6px 6px 0;
-    background: var(--bg2); border: 1px solid var(--line); font-size: calc(var(--fs) * .78); color: var(--accent);
+    display: inline-block; padding: 3px 9px; border-radius: 999px; margin: 0 5px 5px 0;
+    background: var(--bg2); border: 1px solid var(--line); font-size: calc(var(--fs) * .76); color: var(--accent);
   }
-  .empty { text-align: center; color: var(--muted); padding: 28px 12px; font-size: calc(var(--fs) * .9); }
+  .empty { text-align: center; color: var(--muted); padding: 24px 12px; font-size: calc(var(--fs) * .9); }
 
   /* ---------- poster (fixed 2:3 box, never stretches) ---------- */
   .poster {
@@ -127,28 +140,28 @@
   .poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
   /* ---------- recommendation ---------- */
-  .recrow { display: flex; gap: 14px; }
+  .recrow { display: flex; gap: 12px; }
   .recmain { flex: 1; min-width: 0; }
-  .ftitle { font-size: calc(var(--fs) * 1.08); font-weight: 700; line-height: 1.4; }
+  .ftitle { font-size: calc(var(--fs) * 1.02); font-weight: 700; line-height: 1.4; }
   .forig { font-size: calc(var(--fs) * .8); color: var(--muted); margin-top: 1px; }
-  .fmeta { font-size: calc(var(--fs) * .82); color: var(--muted); margin-top: 3px; }
-  .hook { font-size: calc(var(--fs) * .9); margin-top: 8px; }
+  .fmeta { font-size: calc(var(--fs) * .82); color: var(--muted); margin-top: 2px; }
+  .hook { font-size: calc(var(--fs) * .9); margin-top: 6px; }
   .scorebox { text-align: center; flex: none; }
-  .scorebox .num { font-size: 30px; font-weight: 800; color: var(--gold); line-height: 1.1; }
+  .scorebox .num { font-size: 26px; font-weight: 800; color: var(--gold); line-height: 1.1; }
   .scorebox .lbl { font-size: 10.5px; color: var(--muted); letter-spacing: .06em; }
-  .topbadge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #000; background: var(--gold); border-radius: 6px; padding: 2px 8px; margin-bottom: 8px; }
-  .ranknum { font-size: calc(var(--fs) * .85); color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+  .topbadge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #000; background: var(--gold); border-radius: 6px; padding: 2px 8px; margin-bottom: 6px; }
+  .ranknum { font-size: calc(var(--fs) * .85); color: var(--muted); font-weight: 700; margin-bottom: 3px; }
 
-  .axisbars { margin-top: 10px; }
-  .axisrow { display: flex; align-items: center; gap: 8px; margin-top: 5px; font-size: calc(var(--fs) * .76); }
-  .axisrow .al { width: 86px; flex: none; color: var(--muted); }
+  .axisbars { margin-top: 8px; }
+  .axisrow { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: calc(var(--fs) * .76); }
+  .axisrow .al { width: 80px; flex: none; color: var(--muted); }
   .axisrow .bar { position: relative; flex: 1; height: 6px; border-radius: 3px; background: var(--bg2); }
   .axisrow .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--accent); }
   .axisrow .tgt { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--gold); border-radius: 1px; }
   .axisrow .av { width: 52px; flex: none; text-align: right; color: var(--text); }
 
   /* ---------- criteria ---------- */
-  .critrow { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .critrow { padding: 10px 0; border-bottom: 1px solid var(--line); }
   .critrow:last-child { border-bottom: none; }
   .crithead { display: flex; align-items: baseline; gap: 8px; }
   .crithead .cl { font-weight: 700; }
@@ -157,9 +170,9 @@
   input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--accent); }
 
   /* ---------- input / library rows ---------- */
-  .librow { display: flex; gap: 12px; }
+  .librow { display: flex; gap: 10px; }
   .libmain { flex: 1; min-width: 0; }
-  .fieldrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .fieldrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
   .fieldrow label { font-size: calc(var(--fs) * .78); color: var(--muted); display: flex; align-items: center; gap: 6px; }
   .fieldrow input[type="date"], .fieldrow input[type="text"].memo {
     background: var(--bg2); border: 1px solid var(--line); border-radius: 10px;
@@ -170,13 +183,40 @@
   .searchrow { display: flex; gap: 8px; }
   .searchrow .textin { flex: 1; }
   .searchrow .btn { flex: none; }
-  .tmdbrow { display: flex; gap: 12px; align-items: flex-start; }
-  .formgrid label { display: block; font-size: calc(var(--fs) * .8); color: var(--muted); margin: 10px 0 4px; }
+  .tmdbrow { display: flex; gap: 10px; align-items: flex-start; }
+  .formgrid label { display: block; font-size: calc(var(--fs) * .8); color: var(--muted); margin: 8px 0 4px; }
   .formgrid .textin { margin-top: 0; }
 
-  /* ---------- settings ---------- */
-  .setbox { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
-  .setbox h3 { margin: 2px 0 10px; font-size: calc(var(--fs) * 1.0); }
+  /* ---------- settings (diary/zukan composition: pillrow + groupcard/srow + panels) ---------- */
+  .groupcard { background: var(--card); border-radius: 26px; padding: 4px 20px; margin-bottom: 26px; }
+  .groupcard .srow:last-child { border-bottom: none; }
+  .srow {
+    display: flex; align-items: center; gap: 15px; width: 100%; text-align: left;
+    padding: 16px 0; border-bottom: 1px solid var(--line); min-height: 48px; color: var(--text);
+  }
+  .srow:last-child { border-bottom: none; }
+  .srow:active { opacity: .6; }
+  .srow .ic { flex: none; width: 26px; height: 26px; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; }
+  .srow .ic svg { width: 25px; height: 25px; }
+  .srow .lb { flex: 1; font-size: calc(var(--fs) * 1.02); min-width: 0; }
+  .srow .val { color: var(--muted); font-size: calc(var(--fs) * .95); }
+  .srow .chev { color: #6d6d74; font-size: 22px; line-height: 1; }
+  .pillrow {
+    display: flex; align-items: center; gap: 15px; width: 100%; text-align: left;
+    background: var(--card); border-radius: 999px; padding: 18px 22px; margin-bottom: 26px; color: var(--text);
+  }
+  .pillrow:active { opacity: .6; }
+  .pillrow .ic { flex: none; width: 26px; height: 26px; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; }
+  .pillrow .ic svg { width: 25px; height: 25px; }
+  .pillrow .lb { flex: 1; font-size: calc(var(--fs) * 1.02); min-width: 0; }
+  .pillrow .val { color: var(--muted); font-size: calc(var(--fs) * .95); }
+  .pillrow .chev { color: #6d6d74; font-size: 22px; line-height: 1; }
+  .panelnav { display: flex; align-items: center; gap: 6px; margin: 2px 0 14px; }
+  .panelnav .back { min-width: 44px; height: 44px; display: inline-flex; align-items: center; font-size: calc(var(--fs) * .95); color: var(--muted); }
+  .panelnav .pttl { flex: 1; text-align: center; font-weight: 700; font-size: calc(var(--fs) * 1.05); }
+  .setbox { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+  .setlabel { font-size: calc(var(--fs) * .8); color: var(--muted); margin-bottom: 6px; }
+  #verBadge { position: fixed; right: 8px; bottom: calc(env(safe-area-inset-bottom, 0px) + 4px); z-index: 35; font-size: 10px; letter-spacing: .05em; color: var(--muted); opacity: .75; pointer-events: none; font-family: var(--uifont); }
   .syncpill { display: inline-block; font-size: calc(var(--fs) * .8); padding: 4px 12px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--line); color: var(--muted); }
   .syncpill.ok { color: #7ee2a0; }
   .syncpill.err { color: var(--danger); }
@@ -209,8 +249,8 @@
 
   <!-- ======= おすすめ ======= -->
   <section id="view-rec" class="view active">
-    <div class="topbar"><div class="spacer44"></div><div class="ttl">おすすめ</div><div class="spacer44"></div></div>
-    <div id="syncbar"></div>
+    <div class="topbar"><div class="spacer44"></div><div class="ttl">おすすめ<span id="syncdot"></span></div><div class="spacer44"></div></div>
+    <button id="syncbar" onclick="onSyncBarTap()" aria-label="同期状態"></button>
     <main><div id="recwrap"></div></main>
   </section>
 
@@ -235,10 +275,13 @@
   <!-- ======= 設定 ======= -->
   <section id="view-settings" class="view">
     <div class="topbar"><div class="spacer44"></div><div class="ttl">設定</div><div class="spacer44"></div></div>
-    <main><div id="settingswrap"></div></main>
+    <main><div id="settingsmain"></div><div id="settingspanel" style="display:none"></div></main>
   </section>
 
+  <div id="verBadge"></div>
+
   <nav id="pillnav">
+    <span id="navind"></span>
     <button id="nav-rec" class="on" onclick="showView('rec')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.5 5.2 5.7.7-4.2 3.9 1.1 5.6L12 16.2l-5.1 2.7L8 13.3 3.8 9.4l5.7-.7z"/></svg><span>おすすめ</span></button>
     <button id="nav-criteria" onclick="showView('criteria')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><circle cx="9" cy="7" r="2.2" fill="var(--bg)"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="15" cy="12" r="2.2" fill="var(--bg)"/><line x1="5" y1="17" x2="19" y2="17"/><circle cx="7.5" cy="17" r="2.2" fill="var(--bg)"/></svg><span>判定基準</span></button>
     <button id="nav-input" onclick="showView('input')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 5.6a4.5 4.5 0 0 0-6.4 0L12 8 9.6 5.6a4.5 4.5 0 1 0-6.4 6.4L12 20.8l8.8-8.8a4.5 4.5 0 0 0 0-6.4z"/></svg><span>好み入力</span></button>
@@ -413,12 +456,14 @@ function normalizeData(d){
   };
 }
 let DB=null;
+let dataRev=0;
+const renderedRev={};
 function loadLocal(){
   try{ const raw=storeGet(LS_DATA); if(raw){ const d=normalizeData(JSON.parse(raw)); if(d){ DB=d; return; } } }catch(e){}
   DB=seedData(); saveLocal();
 }
 function saveLocal(){ try{ storeSet(LS_DATA, JSON.stringify(DB)); }catch(e){} }
-function touch(){ DB.updatedAt=Date.now(); saveLocal(); scheduleSync(); }
+function touch(){ DB.updatedAt=Date.now(); dataRev++; saveLocal(); scheduleSync(); }
 function filmById(id){ return DB.films.find(f=>f.id===id) || null; }
 function filmByCatalogKey(key){ return DB.films.find(f=>f.catalogKey===key) || null; }
 function posterFor(film){
@@ -484,8 +529,17 @@ function enlargeUrl(url){ return url ? url.replace('/t/p/w342/','/t/p/w780/').re
 function openLightbox(url, title, meta){
   const lb=$('lightbox'); if(!lb) return;
   const img=$('lbimg');
-  img.onerror=function(){ if(img.src!==url) img.src=url; };
-  img.src=enlargeUrl(url);
+  const big=enlargeUrl(url);
+  img.style.opacity='1';
+  img.onerror=function(){ img.style.opacity='0'; };
+  img.onload=function(){ img.style.opacity='1'; };
+  img.src=url; /* the already-loaded small poster shows instantly (no black void) */
+  if(big && big!==url){
+    const pre=new Image();
+    pre.onload=function(){ img.src=big; };
+    /* on failure the small poster simply stays */
+    pre.src=big;
+  }
   $('lbtitle').textContent=title||'';
   $('lbmeta').textContent=meta||'';
   lb.classList.add('open');
@@ -536,7 +590,7 @@ function recCardHTML(pick, isTop, rank){
   let h='<div class="card">';
   if(isTop) h+='<span class="topbadge">今夜のおすすめ</span>';
   else h+='<div class="ranknum">'+rank+'位</div>';
-  h+='<div class="recrow">'+posterWithMeta(f.poster, f.title, metaLine(f), isTop?104:84);
+  h+='<div class="recrow">'+posterWithMeta(f.poster, f.title, metaLine(f), isTop?96:76);
   h+='<div class="recmain"><div style="display:flex;gap:10px;align-items:flex-start"><div style="flex:1;min-width:0">'+
     '<div class="ftitle">'+esc(f.title)+'</div><div class="forig">'+esc(f.titleOrig||'')+'</div>'+
     '<div class="fmeta">'+esc(metaLine(f))+(f.genres&&f.genres.length?'／'+esc(f.genres.join('・')):'')+'</div></div>'+
@@ -551,6 +605,8 @@ function recCardHTML(pick, isTop, rank){
 }
 function renderRec(){
   const wrap=$('recwrap'); if(!wrap) return;
+  if(renderedRev.rec===dataRev) return;
+  renderedRev.rec=dataRev;
   const r=computeRecommendations();
   let h='';
   if(r.profileSource==='criteria-only'){
@@ -643,8 +699,8 @@ function tmdbRowHTML(m, i){
   const title=m.title||m.original_title||'';
   const year=m.release_date ? m.release_date.slice(0,4) : '';
   const already=DB.films.some(f=>f.tmdbId===m.id);
-  let h='<div class="card"><div class="tmdbrow">'+posterWithMeta(poster, title, (year?year+'年／':'')+(m.original_title||''), 62);
-  h+='<div class="libmain"><div class="ftitle" style="font-size:15.5px">'+esc(title)+(already?'<span class="statusbadge">登録済み</span>':'')+'</div>'+
+  let h='<div class="card"><div class="tmdbrow">'+posterWithMeta(poster, title, (year?year+'年／':'')+(m.original_title||''), 56);
+  h+='<div class="libmain"><div class="ftitle" style="font-size:15px">'+esc(title)+(already?'<span class="statusbadge">登録済み</span>':'')+'</div>'+
     '<div class="forig">'+esc(m.original_title||'')+'</div><div class="fmeta">'+esc(year?year+'年':'')+'</div>';
   if(!already){
     h+='<div class="fieldrow"><label>評価 <select class="selin" id="tmdb-rating-'+i+'">'+ratingOptions(null)+'</select></label>'+
@@ -660,8 +716,8 @@ function catalogListHTML(){
   let h='';
   for(const f of list){
     const ex=filmByCatalogKey(f.key);
-    h+='<div class="card"><div class="librow">'+posterWithMeta(f.poster, f.title, metaLine(f), 62)+
-      '<div class="libmain"><div class="ftitle" style="font-size:15.5px">'+esc(f.title)+(ex?'<span class="statusbadge">'+(ex.status==='watched'?'観た':'観たい')+'</span>':'')+'</div>'+
+    h+='<div class="card"><div class="librow">'+posterWithMeta(f.poster, f.title, metaLine(f), 56)+
+      '<div class="libmain"><div class="ftitle" style="font-size:15px">'+esc(f.title)+(ex?'<span class="statusbadge">'+(ex.status==='watched'?'観た':'観たい')+'</span>':'')+'</div>'+
       '<div class="forig">'+esc(f.titleOrig||'')+'</div><div class="fmeta">'+esc(metaLine(f))+'</div>'+
       '<div class="fieldrow"><label>評価 <select class="selin" id="cat-rating-'+f.key+'">'+ratingOptions(ex?ex.rating:null)+'</select></label></div>'+
       '<div class="btnrow"><button class="btn small primary" onclick="onCatalogRegister(\''+f.key+'\',\'watched\')">観た・評価する</button>'+
@@ -749,8 +805,8 @@ async function registerTmdb(i){
 /* ================= view: ライブラリ ================= */
 function libRowHTML(f){
   const poster=posterFor(f);
-  let h='<div class="card"><div class="librow">'+posterWithMeta(poster, f.title, metaLine(f), 62)+
-    '<div class="libmain"><div class="ftitle" style="font-size:15.5px">'+esc(f.title)+'</div>'+
+  let h='<div class="card"><div class="librow">'+posterWithMeta(poster, f.title, metaLine(f), 56)+
+    '<div class="libmain"><div class="ftitle" style="font-size:15px">'+esc(f.title)+'</div>'+
     '<div class="forig">'+esc(f.titleOrig||'')+'</div><div class="fmeta">'+esc(metaLine(f))+'</div>'+
     '<div class="fieldrow"><label>評価 <select class="selin" onchange="onLibRating(\''+f.id+'\', this.value)">'+ratingOptions(f.rating)+'</select></label>'+
     '<label>鑑賞日 <input type="date" value="'+escA(f.watchedDate||'')+'" onchange="onLibDate(\''+f.id+'\', this.value)"></label></div>'+
@@ -764,6 +820,8 @@ function libRowHTML(f){
 }
 function renderLibrary(){
   const wrap=$('librarywrap'); if(!wrap) return;
+  if(renderedRev.library===dataRev) return;
+  renderedRev.library=dataRev;
   const watched=DB.films.filter(f=>f.status==='watched');
   const want=DB.films.filter(f=>f.status==='want');
   let h='<div class="secttl">観た映画（'+watched.length+'）</div>';
@@ -783,33 +841,85 @@ function onLibDelete(id){
 }
 
 /* ================= view: 設定 ================= */
+const SICON = {
+  cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.8 18.5a4.3 4.3 0 01-.4-8.57 6.2 6.2 0 0111.94 1.6A3.9 3.9 0 0117.6 18.5H6.8z"/></svg>',
+  key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15.5" r="4.6"/><path d="M11.4 12.1L20 3.5"/><path d="M16.8 6.7l2.7 2.7"/></svg>',
+  db: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="5.8" rx="7.5" ry="2.9"/><path d="M4.5 5.8v12.4c0 1.6 3.4 2.9 7.5 2.9s7.5-1.3 7.5-2.9V5.8"/><path d="M4.5 12c0 1.6 3.4 2.9 7.5 2.9s7.5-1.3 7.5-2.9"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.7"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.9" r="1.2" fill="currentColor" stroke="none"/></svg>'
+};
+let settingsPanel=null;
+function driveVal(){ return syncStatus==='synced' ? '同期済み' : (syncStatus==='syncing' ? '同期中…' : (syncStatus==='error' ? '同期エラー' : (relayReady() ? '中継で接続済み' : '未接続'))); }
+function srow(icon, label, val, onclick){
+  return '<button class="srow" onclick="'+onclick+'"><span class="ic">'+icon+'</span><span class="lb">'+esc(label)+'</span>'+(val?'<span class="val">'+esc(val)+'</span>':'')+'<span class="chev">›</span></button>';
+}
 function renderSettings(){
-  const wrap=$('settingswrap'); if(!wrap) return;
-  const tok=getTmdbToken();
-  let h='<div class="secttl">TMDb連携</div><div class="setbox"><h3>API Read Access Token</h3>'+
-    '<input class="textin" id="tmdb-token-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="トークンを貼り付け" value="'+escA(tok)+'">'+
-    '<div class="btnrow"><button class="btn primary" onclick="saveTmdbToken()">保存</button><button class="btn" onclick="clearTmdbToken()">消去</button></div>'+
-    '<div class="note">トークンはこの端末内にだけ保存され、Driveには同期されません。</div></div>';
-  h+='<div class="secttl">Google Drive 同期</div><div class="setbox"><h3>同期</h3>'+
-    '<span class="syncpill" id="syncpill">未接続</span>'+
-    '<div class="btnrow"><button class="btn primary" onclick="connectDrive()">Google Driveと接続</button><button class="btn" onclick="syncNow(\'manual\')">今すぐ同期</button><button class="btn" onclick="disconnectDrive()">切断</button></div>'+
-    '<div class="syncstat" id="syncstat"></div>'+
-    '<div class="note">同期先は Drive 上の「movie.json」（このアプリが作成したファイルのみ読み書きします）。未接続でも端末内で全機能が使えます。</div></div>';
-  const rc=relayCfg();
-  h+='<div class="secttl">中継（Apps Script）</div><div class="setbox"><h3>中継</h3>'+
-    '<input class="textin" id="relay-url-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="中継の URL（https://script.google.com/macros/s/…）" value="'+(rc ? escA(rc.url) : '')+'">'+
-    '<input class="textin" id="relay-secret-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="シークレット" value="'+(rc ? escA(rc.secret) : '')+'" style="margin-top:8px">'+
-    '<div class="btnrow"><button class="btn primary" onclick="relaySaveAndTest()">保存して接続テスト</button>'+(rc ? '<button class="btn" onclick="relayClear()">中継を解除</button>' : '')+'</div>'+
-    '<div class="syncstat" id="relaystat">'+(rc ? '設定済みです。接続テストで中継の応答を確認できます。' : '未設定です。')+'</div>'+
-    '<div class="note">あなたの Google アカウントの中で動く中継経由で同期します。設定すると Google ログインが不要になり、アプリを落としても接続が切れません。URL とシークレットはこの端末内にだけ保存されます。</div></div>';
-  h+='<div class="secttl">データ</div><div class="setbox"><h3>データのインポート</h3>'+
-    '<div class="note" style="margin-top:0">移行用ファイル（movie.json と同じ形式の JSON）を読み込み、今のデータを置き換えます。一度だけ使う想定の機能です。</div>'+
-    '<div class="btnrow"><button class="btn" onclick="document.getElementById(\'importfile\').click()">JSONファイルを読み込む</button></div></div>';
-  h+='<div class="secttl">このアプリについて</div><div class="setbox">'+
-    '<div class="note" style="margin:0">映画おすすめアプリ（独立版） v'+APP_VERSION+' ／ データは端末内と、接続時はあなたの Google Drive に保存されます。</div>'+
-    '<div class="note">This product uses the TMDB API but is not endorsed or certified by TMDB.</div></div>';
-  wrap.innerHTML=h;
+  renderSettingsMain();
+  const p=$('settingspanel'), m=$('settingsmain');
+  if(settingsPanel) renderSettingsPanel();
+  else { if(p) p.style.display='none'; if(m) m.style.display='block'; }
   renderSyncStatus();
+}
+function renderSettingsMain(){
+  const el=$('settingsmain'); if(!el) return;
+  const tok=getTmdbToken();
+  el.innerHTML =
+    '<button class="pillrow" onclick="openSettingsPanel(\'drive\')"><span class="ic">'+SICON.cloud+'</span><span class="lb">Google Drive 同期</span><span class="val">'+esc(driveVal())+'</span><span class="chev">›</span></button>'+
+    '<div class="groupcard">'+
+      srow(SICON.key, 'TMDb連携', tok ? '設定済み' : '未設定', "openSettingsPanel('tmdb')")+
+      srow(SICON.db, 'データ', '', "openSettingsPanel('data')")+
+    '</div>'+
+    '<div class="groupcard">'+
+      srow(SICON.info, 'このアプリについて', 'v'+APP_VERSION, "openSettingsPanel('about')")+
+    '</div>';
+}
+function openSettingsPanel(name){ settingsPanel=name; renderSettings(); window.scrollTo(0,0); }
+function closeSettingsPanel(){ settingsPanel=null; renderSettings(); window.scrollTo(0,0); }
+function panelShell(title, inner){
+  return '<div class="panelnav"><button class="back" onclick="closeSettingsPanel()">‹ 戻る</button><div class="pttl">'+esc(title)+'</div><div class="spacer44"></div></div>'+inner;
+}
+function renderSettingsPanel(){
+  const m=$('settingsmain'); if(m) m.style.display='none';
+  const p=$('settingspanel'); if(!p) return;
+  p.style.display='block';
+  if(settingsPanel==='drive'){
+    const rc=relayCfg();
+    p.innerHTML = panelShell('Google Drive 同期',
+      '<div class="setbox">'+
+      '<span class="syncpill" id="syncpill">未接続</span>'+
+      '<div class="btnrow"><button class="btn primary" onclick="connectDrive()">Google Driveと接続</button><button class="btn" onclick="syncNow(\'manual\')">今すぐ同期</button><button class="btn" onclick="disconnectDrive()">切断</button></div>'+
+      '<div class="syncstat" id="syncstat"></div>'+
+      '<div class="note">同期先は Drive 上の「movie.json」（このアプリが作成したファイルのみ読み書きします）。未接続でも端末内で全機能が使えます。</div>'+
+      '</div>'+
+      '<div class="setbox" style="margin-top:12px">'+
+      '<div class="setlabel">中継（Apps Script）</div>'+
+      '<input class="textin" id="relay-url-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="中継の URL（https://script.google.com/macros/s/…）" value="'+(rc ? escA(rc.url) : '')+'">'+
+      '<input class="textin" id="relay-secret-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="シークレット" value="'+(rc ? escA(rc.secret) : '')+'" style="margin-top:8px">'+
+      '<div class="btnrow"><button class="btn primary" onclick="relaySaveAndTest()">保存して接続テスト</button>'+(rc ? '<button class="btn" onclick="relayClear()">中継を解除</button>' : '')+'</div>'+
+      '<div class="syncstat" id="relaystat">'+(rc ? '設定済みです。接続テストで中継の応答を確認できます。' : '未設定です。')+'</div>'+
+      '<div class="note">あなたの Google アカウントの中で動く中継経由で同期します。設定すると Google ログインが不要になり、アプリを落としても接続が切れません。URL とシークレットはこの端末内にだけ保存されます。</div>'+
+      '</div>');
+    renderSyncStatus();
+  }
+  else if(settingsPanel==='tmdb'){
+    const tok=getTmdbToken();
+    p.innerHTML = panelShell('TMDb連携',
+      '<div class="setbox"><div class="setlabel">API Read Access Token</div>'+
+      '<input class="textin" id="tmdb-token-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="トークンを貼り付け" value="'+escA(tok)+'">'+
+      '<div class="btnrow"><button class="btn primary" onclick="saveTmdbToken()">保存</button><button class="btn" onclick="clearTmdbToken()">消去</button></div>'+
+      '<div class="note">トークンはこの端末内にだけ保存され、Driveには同期されません。</div></div>');
+  }
+  else if(settingsPanel==='data'){
+    p.innerHTML = panelShell('データ',
+      '<div class="setbox"><div class="setlabel">データのインポート</div>'+
+      '<div class="note" style="margin-top:0">移行用ファイル（movie.json と同じ形式の JSON）を読み込み、今のデータを置き換えます。一度だけ使う想定の機能です。</div>'+
+      '<div class="btnrow"><button class="btn" onclick="document.getElementById(\'importfile\').click()">JSONファイルを読み込む</button></div></div>');
+  }
+  else if(settingsPanel==='about'){
+    p.innerHTML = panelShell('このアプリについて',
+      '<div class="setbox">'+
+      '<div class="note" style="margin:0">映画おすすめアプリ（独立版） v'+APP_VERSION+' ／ データは端末内と、接続時はあなたの Google Drive に保存されます。</div>'+
+      '<div class="note">This product uses the TMDB API but is not endorsed or certified by TMDB.</div></div>');
+  }
 }
 function saveTmdbToken(){
   const v=($('tmdb-token-in').value||'').trim();
@@ -861,11 +971,46 @@ function showView(name){
   try{ window.scrollTo(0,0); }catch(e){}
   if(name==='rec') renderRec();
   if(name==='library') renderLibrary();
-  if(name==='settings') renderSyncStatus();
+  if(name==='settings') renderSettings();
+  moveNavInd(true);
 }
 function renderAll(){
+  for(const k in renderedRev) delete renderedRev[k];
   renderRec(); renderCriteria(); renderInput(); renderLibrary(); renderSettings();
 }
+
+/* ================= pill nav indicator + pinning (diary pattern) ================= */
+let lastNavX=null;
+function moveNavInd(animate){
+  const ind=$('navind'); if(!ind) return;
+  const b=document.querySelector('#pillnav button.on') || $('nav-'+currentView);
+  if(!b) return;
+  const x=b.offsetLeft, w=b.offsetWidth;
+  if(!w) return;
+  ind.style.width=w+'px';
+  ind.style.left=x+'px';
+  lastNavX=x;
+  if(!animate){ ind.style.transition='none'; requestAnimationFrame(()=>{ ind.style.transition=''; }); }
+}
+function pinNav(){
+  /* iOS standalone shrinks the fixed-position frame when the page is not
+     scrollable, floating the bar up. Measure the real gap to the screen
+     bottom and compensate so the bar always sits 15px above it. */
+  const nav=$('pillnav'); if(!nav || nav.style.display==='none') return;
+  nav.style.bottom='15px';
+  const gap=window.innerHeight - nav.getBoundingClientRect().bottom;
+  if(Math.abs(gap-15)>2) nav.style.bottom=(30-gap)+'px';
+}
+function healNav(){
+  const nav=$('pillnav'); if(!nav || nav.style.display==='none') return;
+  pinNav();
+  nav.style.opacity='0.99';
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ nav.style.opacity=''; }); });
+}
+let navHealTimer=null;
+window.addEventListener('resize', ()=>{ moveNavInd(false); pinNav(); });
+window.addEventListener('scroll', ()=>{ if(navHealTimer) clearTimeout(navHealTimer); navHealTimer=setTimeout(healNav, 160); }, { passive:true });
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) setTimeout(healNav, 60); });
 
 /* ================= Google Drive sync ================= */
 const DRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
@@ -908,13 +1053,28 @@ function renderSyncStatus(){
   else if(syncStatus==='error'){ label='同期エラー'+(syncMsg ? '：'+syncMsg : ''); cls='err'; }
   else if(relayReady()) label='中継で接続済み（未同期）';
   else label='Drive未接続（端末内に保存中）';
-  const bar=$('syncbar'); if(bar) bar.innerHTML='<span class="'+cls+'">'+esc(label)+'</span>';
+  const dot=$('syncdot');
+  if(dot) dot.style.background = ((relayReady() || isDriveConnected()) && syncStatus!=='error') ? '#46a758' : '#e5484d';
+  const bar=$('syncbar');
+  if(bar){
+    let hint='';
+    if(syncStatus==='syncing') hint='';
+    else if(syncStatus==='error') hint=' ・ <span class="sbhint">タップで再試行</span>';
+    else if(relayReady() || isDriveConnected()) hint=' ・ <span class="sbhint">タップで再同期</span>';
+    else hint=' ・ <span class="sbhint">タップで接続</span>';
+    bar.innerHTML='<span class="'+cls+'">'+esc(label)+'</span>'+hint;
+  }
   const st=$('syncstat'); if(st) st.innerHTML='<span class="'+cls+'">'+esc(label)+'</span>';
   const pill=$('syncpill');
   if(pill){
     pill.textContent = syncStatus==='synced' ? '同期済み' : (syncStatus==='syncing' ? '同期中…' : (syncStatus==='error' ? '同期エラー' : (relayReady() ? '中継で接続済み' : '未接続')));
     pill.className='syncpill'+(syncStatus==='synced'?' ok':(syncStatus==='error'?' err':''));
   }
+}
+function onSyncBarTap(){
+  if(syncStatus==='syncing' || syncRunning) return;
+  if(relayReady() || isDriveConnected()){ syncNow('manual'); return; }
+  connectDrive();
 }
 function scheduleSync(){
   if(!isDriveConnected() && !relayReady()) return;
@@ -1112,7 +1272,8 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='1.8';
+const APP_VERSION='1.9';
+{ const vb=$('verBadge'); if(vb) vb.textContent='v'+APP_VERSION; }
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
   sp.classList.remove('wait'); sp.classList.add('hide');
@@ -1156,6 +1317,7 @@ document.addEventListener('touchstart', function(){}, { passive:true });
     setTimeout(()=>{ try{ sp.remove(); }catch(e){} }, 2800);
   }
   renderAll();
+  requestAnimationFrame(()=>{ moveNavInd(false); pinNav(); });
   const authResult=checkAuthRedirect();
   renderSyncStatus();
   if(relayReady()){
