@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="1.9">
+<meta name="app-version" content="1.10">
 <title>映画</title>
 <meta name="application-name" content="映画">
 <meta name="apple-mobile-web-app-title" content="映画">
@@ -892,7 +892,7 @@ function renderSettingsPanel(){
       '</div>'+
       '<div class="setbox" style="margin-top:12px">'+
       '<div class="setlabel">中継（Apps Script）</div>'+
-      '<input class="textin" id="relay-url-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="中継の URL（https://script.google.com/macros/s/…）" value="'+(rc ? escA(rc.url) : '')+'">'+
+      '<input class="textin" id="relay-url-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="中継の URL（https://script.google.com/macros/s/…）" value="'+(rc ? escA(rc.url) : RELAY_URL_DEFAULT)+'">'+
       '<input class="textin" id="relay-secret-in" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="シークレット" value="'+(rc ? escA(rc.secret) : '')+'" style="margin-top:8px">'+
       '<div class="btnrow"><button class="btn primary" onclick="relaySaveAndTest()">保存して接続テスト</button>'+(rc ? '<button class="btn" onclick="relayClear()">中継を解除</button>' : '')+'</div>'+
       '<div class="syncstat" id="relaystat">'+(rc ? '設定済みです。接続テストで中継の応答を確認できます。' : '未設定です。')+'</div>'+
@@ -1176,7 +1176,8 @@ async function driveFetch(path, opts){
    this device's localStorage. GIS remains the fallback. In relay
    mode a file's "id" is simply its name. */
 const LS_RELAY='movie.relay';
-function relayCfg(){ try{ const r=JSON.parse(storeGet(LS_RELAY)||'null'); return (r && r.url && r.secret) ? r : null; }catch(e){ return null; } }
+const RELAY_URL_DEFAULT='https://script.google.com/macros/s/AKfycbziV1Wpv7AWSUJJgaKyRzFeBR81Td4CjryGGuq4avt1xAo-e2mbeyS2vBpCuqx4_KI/exec';
+function relayCfg(){ try{ const r=JSON.parse(storeGet(LS_RELAY)||'null'); return (r && r.secret) ? { url: r.url || RELAY_URL_DEFAULT, secret: r.secret } : null; }catch(e){ return null; } }
 function relayReady(){ return !!relayCfg(); }
 async function relayCall(op, name, content){
   const c=relayCfg(); if(!c) throw new Error('中継が未設定です');
@@ -1188,8 +1189,8 @@ async function relayCall(op, name, content){
 }
 function relaySaveAndTest(){
   const u=$('relay-url-in'), s=$('relay-secret-in'), st=$('relaystat');
-  const url=(u ? u.value : '').trim(), secret=(s ? s.value : '').trim();
-  if(!url || !secret){ if(st) st.textContent='URL とシークレットの両方を入力してください'; return; }
+  const url=(u ? u.value : '').trim() || RELAY_URL_DEFAULT, secret=(s ? s.value : '').trim();
+  if(!secret){ if(st) st.textContent='シークレットを入力してください（URLは入力済みです）'; return; }
   storeSet(LS_RELAY, JSON.stringify({ url:url, secret:secret }));
   if(st) st.textContent='接続テスト中…';
   relayCall('ping').then(()=>{
@@ -1272,7 +1273,7 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='1.9';
+const APP_VERSION='1.10';
 { const vb=$('verBadge'); if(vb) vb.textContent='v'+APP_VERSION; }
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
