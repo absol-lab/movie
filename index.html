@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="2.3">
+<meta name="app-version" content="2.4">
 <title>Cinelabo</title>
 <link rel="icon" type="image/png" href="IMG_2555.png">
 <link rel="apple-touch-icon" href="IMG_2555.png">
@@ -1267,8 +1267,10 @@ function applyUI(){
 }
 
 /* ================= sound (WebAudio synthesized tap, diary pattern) ================= */
+const SOUND_MUTED=true; /* 全アプリ一斉ミュート中（本人の指示 2026-11-13）。サウンド設定・保存値は保持し、再生だけを止める。再開はこのフラグを false に戻すだけ */
 let AC=null;
 function audioCtx(){
+  if(SOUND_MUTED) return null;
   if(!UI.sndOn) return null;
   if(!AC){
     try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
@@ -1288,7 +1290,7 @@ function tone(ac, f0, dur, peak, type){
   o.connect(g); g.connect(ac.destination);
   o.start(t); o.stop(t+dur+0.05);
 }
-function playTap(){ if(!UI.sndOn) return; const ac=audioCtx(); if(!ac) return; tone(ac, 800, 0.03, 0.25, 'triangle'); }
+function playTap(){ if(SOUND_MUTED || !UI.sndOn) return; const ac=audioCtx(); if(!ac) return; tone(ac, 800, 0.03, 0.25, 'triangle'); }
 document.addEventListener('pointerdown', function(){
   const ac=audioCtx(); if(!ac || AC._warmed) return; AC._warmed=true; tone(ac, 440, 0.02, 0.004, 'sine');
 }, true);
@@ -1302,6 +1304,7 @@ document.addEventListener('pointerdown', function(e){
 
 /* ================= update history + bell ================= */
 const HISTORY=[
+  { v:'2.4', d:'2026年11月13日', notes:[ '全アプリ一斉ミュートのため音を停止（設定は保持）' ]},
   { v:'2.3', d:'2026年11月13日', notes:[
     'アプリの型に合わせて土台を刷新：画面遷移をスライド化し、詳細画面から指追随スワイプで戻れるようにした',
     '通知ベルと更新履歴を追加。ヘッダーに最終保存時刻を表示するようにした',
@@ -1831,7 +1834,7 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='2.3';
+const APP_VERSION='2.4';
 { const vb=$('verBadge'); if(vb) vb.textContent='v'+APP_VERSION; }
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
