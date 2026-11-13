@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="app-version" content="2.4">
+<meta name="app-version" content="2.5">
 <title>Cinelabo</title>
 <link rel="icon" type="image/png" href="IMG_2555.png">
 <link rel="apple-touch-icon" href="IMG_2555.png">
@@ -26,7 +26,7 @@ a{ color:var(--acc); }
 #splash{ position:fixed; inset:0; background:#000; z-index:200; transition:opacity .45s ease; }
 #splash.hide{ opacity:0; pointer-events:none; }
 /* ---------- header (Musilabo top bar) ---------- */
-header{ position:sticky; top:0; z-index:20; background:rgba(20,18,16,.92); backdrop-filter:blur(8px); padding:10px 14px 8px; border-bottom:1px solid var(--line); }
+header{ position:sticky; top:0; z-index:20; background:rgba(20,18,16,.92); backdrop-filter:blur(8px); padding:calc(env(safe-area-inset-top, 0px) + 16px) 14px 8px; border-bottom:1px solid var(--line); }
 h1{ font-size:1.06em; margin:0; letter-spacing:.14em; font-weight:700; }
 h1 .en{ color:var(--acc); font-size:.72em; letter-spacing:.22em; margin-left:8px; }
 #syncbar{ display:flex; align-items:center; gap:7px; margin-top:7px; background:none; border:none; color:var(--sub); font-size:.8em; padding:4px 0; cursor:pointer; text-align:left; width:100%; }
@@ -1304,6 +1304,7 @@ document.addEventListener('pointerdown', function(e){
 
 /* ================= update history + bell ================= */
 const HISTORY=[
+  { v:'2.5', d:'2026年11月13日', notes:[ 'タイトルとベルの位置を下げ、時計やバッテリー表示と重ならないよう修正' ]},
   { v:'2.4', d:'2026年11月13日', notes:[ '全アプリ一斉ミュートのため音を停止（設定は保持）' ]},
   { v:'2.3', d:'2026年11月13日', notes:[
     'アプリの型に合わせて土台を刷新：画面遷移をスライド化し、詳細画面から指追随スワイプで戻れるようにした',
@@ -1834,7 +1835,7 @@ async function syncNow(reason){
 }
 
 /* ================= self update ================= */
-const APP_VERSION='2.4';
+const APP_VERSION='2.5';
 { const vb=$('verBadge'); if(vb) vb.textContent='v'+APP_VERSION; }
 function splashGo(){
   const sp=$('splash'); if(!sp || sp.dataset.went) return; sp.dataset.went='1';
